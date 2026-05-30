@@ -2,6 +2,7 @@
 node_modules/
 
 # Archivos generados por Gulp (no versionar artefactos de build)
+assets/css/
 assets/production/mincss/
 assets/production/minjs/
 

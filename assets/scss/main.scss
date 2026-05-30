@@ -3,22 +3,25 @@
 // Gulp compila este archivo a assets/production/mincss/main.min.css
 // NO importar desde templates PHP directamente.
 
+// ─── 0. Fuentes autoalojadas ──────────────────────────────────────────────────
+@use 'fonts';
+
 // ─── 1. Tokens y variables ────────────────────────────────────────────────────
-@import 'variables';
+@use 'variables';
 
 // ─── 2. Reset y base ──────────────────────────────────────────────────────────
-@import 'reset';
-@import 'typography';
+@use 'reset';
+@use 'typography';
 
 // ─── 3. Layout ────────────────────────────────────────────────────────────────
-@import 'layout';
+@use 'layout';
 
 // ─── 4. Componentes ───────────────────────────────────────────────────────────
-@import 'components/button';
-@import 'components/card';
-@import 'components/hero';
+@use 'components/button';
+@use 'components/card';
+@use 'components/hero';
 
 // ─── 5. Vendor / Overrides ────────────────────────────────────────────────────
 // Aquí irán overrides de Gutenberg, WooCommerce, etc.
-// @import 'vendor/gutenberg';
-// @import 'vendor/woocommerce';
+// @use 'vendor/gutenberg';
+// @use 'vendor/woocommerce';

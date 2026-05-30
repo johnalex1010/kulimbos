@@ -49,9 +49,11 @@
   }
 
   &__site-name {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-bold);
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-extrabold);
+    line-height: var(--line-height-tight);
     color: var(--color-heading);
+    font-size: var(--text-2xl);
 
     &:hover {
       color: var(--color-primary);
@@ -93,9 +95,15 @@
     }
 
     &[aria-expanded='true'] {
-      .site-nav__toggle-bar:nth-child(1) { transform: translateY(8px) rotate(45deg); }
-      .site-nav__toggle-bar:nth-child(2) { opacity: 0; }
-      .site-nav__toggle-bar:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+      .site-nav__toggle-bar:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+      }
+      .site-nav__toggle-bar:nth-child(2) {
+        opacity: 0;
+      }
+      .site-nav__toggle-bar:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+      }
     }
   }
 
@@ -105,7 +113,9 @@
     height: 2px;
     background-color: currentColor;
     border-radius: var(--radius-full);
-    transition: transform var(--transition-fast), opacity var(--transition-fast);
+    transition:
+      transform var(--transition-fast),
+      opacity var(--transition-fast);
   }
 
   &__list {
@@ -318,7 +328,10 @@
     font-size: var(--text-sm);
     font-weight: var(--font-weight-medium);
     color: var(--color-text);
-    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast),
+      color var(--transition-fast);
 
     &:hover,
     &:focus-visible {

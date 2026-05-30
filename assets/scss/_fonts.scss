@@ -1,0 +1,83 @@
+// _fonts.scss
+// Declaraciones @font-face para las fuentes autoalojadas del proyecto.
+//
+// Archivos en assets/fonts/:
+//   Baloo2-Regular.woff2      → titulares peso 400
+//   Baloo2-Medium.woff2       → titulares peso 500
+//   Baloo2-Bold.woff2         → titulares peso 700
+//   Baloo2-ExtraBold.woff2    → titulares peso 800
+//   Nunito-Regular.woff2      → cuerpo peso 400
+//   Nunito-Medium.woff2       → cuerpo peso 500
+//   Nunito-SemiBold.woff2     → cuerpo peso 600
+//   Nunito-Bold.woff2         → cuerpo peso 700
+//
+// Ruta relativa desde el CSS compilado:
+//   assets/production/mincss/main.min.css → ../../fonts/
+
+// ─── Baloo 2 — Titulares (h1–h6) ─────────────────────────────────────────────
+
+@font-face {
+  font-family: 'Baloo 2';
+  src: url('../../fonts/Baloo2-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style:  normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Baloo 2';
+  src: url('../../fonts/Baloo2-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style:  normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Baloo 2';
+  src: url('../../fonts/Baloo2-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style:  normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Baloo 2';
+  src: url('../../fonts/Baloo2-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
+  font-style:  normal;
+  font-display: swap;
+}
+
+// ─── Nunito — Cuerpo de texto (p, a, li, td, th, label, input…) ──────────────
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('../../fonts/Nunito-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style:  normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('../../fonts/Nunito-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style:  normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('../../fonts/Nunito-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style:  normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  src: url('../../fonts/Nunito-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style:  normal;
+  font-display: swap;
+}
