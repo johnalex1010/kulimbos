@@ -1,0 +1,28 @@
+# Dependencias de Node
+node_modules/
+
+# Archivos generados por Gulp (no versionar artefactos de build)
+assets/production/mincss/
+assets/production/minjs/
+
+# Logs
+npm-debug.log*
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+
+# Variables de entorno locales
+.env
+.env.local
+
+# WordPress
+wp-config.php

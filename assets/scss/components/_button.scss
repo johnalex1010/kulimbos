@@ -1,0 +1,127 @@
+// components/_button.scss
+// Componente de botón. Modifier classes siguen la convención BEM.
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  text-decoration: none;
+  border: 2px solid transparent;
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  // ── Variantes ──────────────────────────────────────────────────────────────
+
+  &--primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--color-primary-dark);
+      border-color: var(--color-primary-dark);
+      color: #ffffff;
+      text-decoration: none;
+      box-shadow: var(--shadow-md);
+    }
+  }
+
+  &--secondary {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: #ffffff;
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--color-secondary-dark);
+      border-color: var(--color-secondary-dark);
+      color: #ffffff;
+      text-decoration: none;
+    }
+  }
+
+  &--outline {
+    background-color: transparent;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--color-primary);
+      color: #ffffff;
+      text-decoration: none;
+    }
+  }
+
+  &--ghost {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--color-primary);
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--color-primary-light);
+      text-decoration: none;
+    }
+  }
+
+  // Botón de solo texto sin padding lateral en el borde.
+  &--text {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--color-primary);
+    padding-inline: 0;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--color-primary-dark);
+      text-decoration: underline;
+    }
+  }
+
+  // ── Tamaños ────────────────────────────────────────────────────────────────
+
+  &--sm {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+  }
+
+  &--lg {
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--text-base);
+    border-radius: var(--radius-lg);
+  }
+
+  // ── Estado deshabilitado ───────────────────────────────────────────────────
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}

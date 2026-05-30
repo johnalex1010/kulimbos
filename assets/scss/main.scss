@@ -1,0 +1,24 @@
+// main.scss
+// Punto de entrada principal del sistema de estilos.
+// Gulp compila este archivo a assets/production/mincss/main.min.css
+// NO importar desde templates PHP directamente.
+
+// ─── 1. Tokens y variables ────────────────────────────────────────────────────
+@import 'variables';
+
+// ─── 2. Reset y base ──────────────────────────────────────────────────────────
+@import 'reset';
+@import 'typography';
+
+// ─── 3. Layout ────────────────────────────────────────────────────────────────
+@import 'layout';
+
+// ─── 4. Componentes ───────────────────────────────────────────────────────────
+@import 'components/button';
+@import 'components/card';
+@import 'components/hero';
+
+// ─── 5. Vendor / Overrides ────────────────────────────────────────────────────
+// Aquí irán overrides de Gutenberg, WooCommerce, etc.
+// @import 'vendor/gutenberg';
+// @import 'vendor/woocommerce';

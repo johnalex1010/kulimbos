@@ -1,0 +1,33 @@
+{
+  "name": "kulimbos-theme",
+  "version": "1.0.0",
+  "description": "Tema WordPress modular para Kulimbos",
+  "private": true,
+  "scripts": {
+    "build":   "gulp build",
+    "dev":     "gulp",
+    "watch":   "gulp watch",
+    "css":     "gulp css",
+    "js":      "gulp js"
+  },
+  "devDependencies": {
+    "gulp":                "^5.0.0",
+    "gulp-sass":           "^5.1.0",
+    "sass":                "^1.77.0",
+    "gulp-autoprefixer":   "^9.0.0",
+    "gulp-clean-css":      "^4.3.0",
+    "gulp-terser":         "^2.1.0",
+    "gulp-concat":         "^2.6.0",
+    "gulp-rename":         "^2.0.0",
+    "del":                 "^7.1.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%",
+    "not dead",
+    "not IE 11"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

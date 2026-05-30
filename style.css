@@ -1,0 +1,16 @@
+/*
+Theme Name:  Kulimbos
+Theme URI:   https://kulimbos.com
+Description: Tema WordPress modular y personalizado para Kulimbos. Sin page builders. Arquitectura por responsabilidades: templates, partials, components, helpers, assets y configuración.
+Version:     1.0.0
+Author:      Kulimbos
+Author URI:  https://kulimbos.com
+Text Domain: kulimbos
+Domain Path: /languages
+License:     GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Tags:        custom-logo, custom-menu, featured-images, threaded-comments, translation-ready
+
+Este archivo solo contiene el encabezado del tema.
+Los estilos viven en assets/scss/ y se compilan vía Gulp a assets/production/mincss/
+*/
