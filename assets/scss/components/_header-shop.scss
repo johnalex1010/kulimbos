@@ -1,0 +1,313 @@
+// components/_header-shop.scss
+// Header e-commerce Kulimbos: dos filas (branding+search+actions / nav).
+
+// ── Íconos generales ─────────────────────────────────────────────────────────
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+// ── Estructura de dos filas ───────────────────────────────────────────────────
+
+.site-header {
+  background-color: var(--color-bg);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+
+  &--scrolled {
+    box-shadow: var(--shadow-md);
+  }
+
+  // Fila 1
+  &__top {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  &__top-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: 72px;
+    padding-block: var(--space-3);
+  }
+
+  // Branding
+  &__branding {
+    flex-shrink: 0;
+  }
+
+  &__logo {
+    img {
+      height: 52px;
+      width: auto;
+    }
+  }
+
+  &__site-name {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-extrabold);
+    font-size: var(--text-2xl);
+    color: var(--color-primary);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-primary-dark);
+      text-decoration: none;
+    }
+  }
+
+  // Fila 2 — barra de navegación
+  &__nav-bar {
+    background-color: var(--color-bg);
+  }
+}
+
+// ── Buscador ──────────────────────────────────────────────────────────────────
+
+.header-search {
+  flex: 1;
+  max-width: 560px;
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+
+  &__form {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast);
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-light);
+    }
+  }
+
+  &__input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    font-family: var(--font-primary);
+    color: var(--color-text);
+    background: transparent;
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    background-color: var(--color-primary);
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color var(--transition-fast);
+
+    & .icon {
+      margin-top: -2px;
+      margin-right: 3px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--color-primary-dark);
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// ── Acciones (cuenta / favoritos / carrito) ───────────────────────────────────
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+
+  @media (max-width: 767px) {
+    gap: 0;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    position: relative;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-base);
+    color: var(--color-text);
+    text-decoration: none;
+    transition:
+      color var(--transition-fast),
+      background-color var(--transition-fast);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--color-primary);
+      background-color: var(--color-primary-light);
+      text-decoration: none;
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-2);
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: 10px;
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+    line-height: 1;
+
+    @media (max-width: 480px) {
+      display: none;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: var(--font-weight-bold);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    pointer-events: none;
+
+    // Oculta el badge cuando vale 0
+    &:empty,
+    &[data-count='0'] {
+      display: none;
+    }
+  }
+}
+
+// ── Nav principal (fila 2) ────────────────────────────────────────────────────
+
+.site-nav {
+  &__list {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    @media (max-width: 767px) {
+      display: none;
+      flex-direction: column;
+      align-items: stretch;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: var(--color-bg);
+      border-top: 1px solid var(--color-border);
+      box-shadow: var(--shadow-md);
+      z-index: var(--z-overlay);
+      padding: var(--space-2) 0;
+
+      &.is-open {
+        display: flex;
+      }
+    }
+
+    .menu-item a {
+      display: block;
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text);
+      white-space: nowrap;
+      transition: color var(--transition-fast);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+    }
+
+    .current-menu-item > a,
+    .current-menu-ancestor > a {
+      color: var(--color-primary);
+      font-weight: var(--font-weight-bold);
+      border-bottom: 2px solid var(--color-primary);
+    }
+  }
+
+  // Toggle móvil
+  &__toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: var(--color-text);
+    margin-left: var(--space-2);
+
+    @media (max-width: 767px) {
+      display: flex;
+    }
+
+    &[aria-expanded='true'] {
+      .site-nav__toggle-bar:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+      }
+      .site-nav__toggle-bar:nth-child(2) {
+        opacity: 0;
+      }
+      .site-nav__toggle-bar:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+      }
+    }
+  }
+
+  &__toggle-bar {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background-color: currentColor;
+    border-radius: var(--radius-full);
+    transition:
+      transform var(--transition-fast),
+      opacity var(--transition-fast);
+  }
+}

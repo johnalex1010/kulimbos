@@ -15,18 +15,6 @@ defined( 'ABSPATH' ) || exit;
 	aria-label="<?php esc_attr_e( 'Menú principal', 'kulimbos' ); ?>"
 	itemscope itemtype="https://schema.org/SiteNavigationElement">
 
-	<button
-		class="site-nav__toggle"
-		id="menu-toggle"
-		aria-controls="primary-menu-list"
-		aria-expanded="false"
-		aria-label="<?php esc_attr_e( 'Abrir menú', 'kulimbos' ); ?>"
-	>
-		<span class="site-nav__toggle-bar" aria-hidden="true"></span>
-		<span class="site-nav__toggle-bar" aria-hidden="true"></span>
-		<span class="site-nav__toggle-bar" aria-hidden="true"></span>
-	</button>
-
 	<?php
 	wp_nav_menu(
 		array(

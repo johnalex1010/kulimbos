@@ -1,0 +1,114 @@
+// components/_newsletter.scss
+
+.newsletter-section {
+  padding-block: var(--space-10);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+
+  &__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-6);
+
+    @media (min-width: 1024px) {
+      flex-wrap: nowrap;
+      gap: var(--space-8);
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    flex-shrink: 0;
+
+    @media (max-width: 639px) {
+      display: none;
+    }
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-extrabold);
+    color: var(--color-heading);
+    margin: 0 0 var(--space-1);
+    line-height: var(--line-height-tight);
+  }
+
+  &__desc {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  &__form {
+    display: flex;
+    gap: 0;
+    flex: 1;
+    min-width: 280px;
+    max-width: 480px;
+
+    @media (max-width: 480px) {
+      flex-direction: column;
+      gap: var(--space-3);
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  &__input {
+    flex: 1;
+    border: 1px solid var(--color-border);
+    border-right: none;
+    border-radius: var(--radius-full) 0 0 var(--radius-full);
+    padding: var(--space-3) var(--space-5);
+    font-family: var(--font-primary);
+    font-size: var(--text-base);
+    color: var(--color-text);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    &:focus {
+      border-color: var(--color-primary);
+      box-shadow: inset 0 0 0 1px var(--color-primary);
+    }
+
+    @media (max-width: 480px) {
+      border-right: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+    }
+  }
+
+  &__btn {
+    border-radius: 0 var(--radius-full) var(--radius-full) 0;
+    white-space: nowrap;
+
+    @media (max-width: 480px) {
+      border-radius: var(--radius-full);
+      justify-content: center;
+    }
+  }
+
+  &__feedback {
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-success);
+    width: 100%;
+  }
+}

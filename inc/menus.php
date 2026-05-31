@@ -13,10 +13,13 @@ defined( 'ABSPATH' ) || exit;
 function kulimbos_register_menus(): void {
 	register_nav_menus(
 		array(
-			'primary'   => __( 'Menú principal', 'kulimbos' ),
-			'footer'    => __( 'Menú de pie de página', 'kulimbos' ),
-			'social'    => __( 'Redes sociales', 'kulimbos' ),
-			'secondary' => __( 'Menú secundario', 'kulimbos' ),
+			'primary'            => __( 'Menú principal', 'kulimbos' ),
+			'footer'             => __( 'Menú de pie de página', 'kulimbos' ),
+			'footer_information' => __( 'Footer - Información', 'kulimbos' ),
+			'footer_account'     => __( 'Footer - Mi cuenta', 'kulimbos' ),
+			'footer_help'        => __( 'Footer - Ayuda', 'kulimbos' ),
+			'social'             => __( 'Redes sociales', 'kulimbos' ),
+			'secondary'          => __( 'Menú secundario', 'kulimbos' ),
 		)
 	);
 }

@@ -30,6 +30,20 @@ function kulimbos_theme_setup(): void {
 	// Tamaño cuadrado para avatares y thumbnails compactos.
 	add_image_size( 'kulimbos-square', 400, 400, true );
 
+	// ── Tamaños para la homepage e-commerce ──────────────────────────────────
+
+	// Hero slide: 1440×600 (ratio 12:5). Primer slide no lleva lazy-load (LCP).
+	add_image_size( 'kulimbos-hero-slide', 1440, 600, true );
+
+	// Product card: cuadrado 1:1. Se usa en el grid de productos.
+	add_image_size( 'kulimbos-product', 400, 400, true );
+
+	// Banner promocional: ratio ~2.27:1.
+	add_image_size( 'kulimbos-banner', 680, 300, true );
+
+	// Avatar de testimonio: cuadrado pequeño.
+	add_image_size( 'kulimbos-avatar', 80, 80, true );
+
 	// Salida HTML5 semántica para formularios, galerías y comentarios.
 	add_theme_support(
 		'html5',

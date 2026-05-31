@@ -16,28 +16,46 @@
 
 <header class="site-header" role="banner" itemscope itemtype="https://schema.org/WPHeader">
 
-	<div class="site-header__inner container">
+	<!-- Fila 1: Branding + Buscador + Acciones -->
+	<div class="site-header__top">
+		<div class="site-header__top-inner container">
 
-		<div class="site-header__branding">
-			<?php if ( has_custom_logo() ) : ?>
-				<div class="site-header__logo">
-					<?php the_custom_logo(); ?>
-				</div>
-			<?php else : ?>
-				<a class="site-header__site-name" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" itemprop="url">
-					<?php bloginfo( 'name' ); ?>
-				</a>
-				<?php
-				$tagline = get_bloginfo( 'description', 'display' );
-				if ( $tagline ) :
-				?>
-					<p class="site-header__tagline"><?php echo esc_html( $tagline ); ?></p>
+			<div class="site-header__branding">
+				<?php if ( has_custom_logo() ) : ?>
+					<div class="site-header__logo">
+						<?php the_custom_logo(); ?>
+					</div>
+				<?php else : ?>
+					<a class="site-header__site-name" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" itemprop="url">
+						<?php bloginfo( 'name' ); ?>
+					</a>
 				<?php endif; ?>
-			<?php endif; ?>
+			</div>
+
+			<?php get_template_part( 'template-parts/layout/header-search' ); ?>
+			<?php get_template_part( 'template-parts/layout/header-actions' ); ?>
+
+			<!-- Toggle móvil -->
+			<button
+				class="site-nav__toggle"
+				id="menu-toggle"
+				aria-controls="primary-menu-list"
+				aria-expanded="false"
+				aria-label="<?php esc_attr_e( 'Abrir menú', 'kulimbos' ); ?>"
+			>
+				<span class="site-nav__toggle-bar" aria-hidden="true"></span>
+				<span class="site-nav__toggle-bar" aria-hidden="true"></span>
+				<span class="site-nav__toggle-bar" aria-hidden="true"></span>
+			</button>
+
 		</div>
+	</div>
 
-		<?php get_template_part( 'template-parts/layout/header-navigation' ); ?>
-
+	<!-- Fila 2: Navegación principal -->
+	<div class="site-header__nav-bar">
+		<div class="container">
+			<?php get_template_part( 'template-parts/layout/header-navigation' ); ?>
+		</div>
 	</div>
 
 </header>

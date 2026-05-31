@@ -3,25 +3,36 @@
 // Gulp compila este archivo a assets/production/mincss/main.min.css
 // NO importar desde templates PHP directamente.
 
-// ─── 0. Fuentes autoalojadas ──────────────────────────────────────────────────
+// --- 0. Fuentes autoalojadas -------------------------------------------------
 @use 'fonts';
 
-// ─── 1. Tokens y variables ────────────────────────────────────────────────────
+// --- 1. Tokens y variables ---------------------------------------------------
 @use 'variables';
 
-// ─── 2. Reset y base ──────────────────────────────────────────────────────────
+// --- 2. Reset y base ---------------------------------------------------------
 @use 'reset';
 @use 'typography';
 
-// ─── 3. Layout ────────────────────────────────────────────────────────────────
+// --- 3. Layout ---------------------------------------------------------------
 @use 'layout';
 
-// ─── 4. Componentes ───────────────────────────────────────────────────────────
+// --- 4. Componentes base -----------------------------------------------------
 @use 'components/button';
 @use 'components/card';
 @use 'components/hero';
 
-// ─── 5. Vendor / Overrides ────────────────────────────────────────────────────
-// Aquí irán overrides de Gutenberg, WooCommerce, etc.
+// --- 5. Header e-commerce ----------------------------------------------------
+@use 'components/header-shop';
+
+// --- 6. Homepage -------------------------------------------------------------
+@use 'components/home-hero';
+@use 'components/benefits-bar';
+@use 'components/product-card';
+@use 'components/categories-grid';
+@use 'components/promo-banners';
+@use 'components/testimonials';
+@use 'components/newsletter';
+
+// --- 7. Vendor / Overrides ---------------------------------------------------
 // @use 'vendor/gutenberg';
 // @use 'vendor/woocommerce';
