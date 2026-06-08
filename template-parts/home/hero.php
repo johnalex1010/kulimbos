@@ -70,8 +70,8 @@ $hero_image_url = get_template_directory_uri() . '/assets/img/hero/hero.png';
 				</li>
 			</ul>
 
-			<a class="home-hero__cta" href="<?php echo esc_url(home_url('/productos/')); ?>">
-				<span><?php esc_html_e('¡Ver productos!', 'kulimbos'); ?></span>
+			<a class="home-hero__cta" href="<?php echo esc_url(home_url('/categorias/')); ?>">
+				<span><?php esc_html_e('¡Ver categorías!', 'kulimbos'); ?></span>
 				<?php kulimbos_the_icon('arrow-right', '', 20); ?>
 			</a>
 		</div>
