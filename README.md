@@ -321,6 +321,50 @@ Crear en la raíz del tema con la cabecera:
 
 ---
 
+## Catálogo de productos
+
+El tema registra el CPT `producto` y la taxonomía jerárquica `categoria_producto`.
+
+### Rutas recomendadas
+
+- Archivo general: `/productos/`
+- Categoría padre: `/categoria/juguetes/`
+- Subcategoría: `/categoria/juguetes/peluches/`
+- Producto: `/productos/juguetes/peluches/oso-de-peluche/`
+
+La miga de pan recomendada para un producto es:
+
+```text
+Inicio / Categorías / Juguetes / Peluches / Oso de peluche
+```
+
+### Flujo en WordPress
+
+1. Ir a **Productos → Categorías** y crear categorías jerárquicas, por ejemplo `Juguetes` y dentro `Peluches`.
+2. Ir a **Productos → Añadir nuevo**.
+3. Asignar una o más categorías de producto.
+4. Agregar imagen destacada.
+5. Configurar metadatos opcionales desde campos personalizados:
+   - `kulimbos_product_price`
+   - `kulimbos_product_rating`
+   - `kulimbos_product_reviews`
+   - `kulimbos_product_age`
+   - `kulimbos_product_size`
+   - `kulimbos_product_color`
+   - `kulimbos_product_material`
+
+WordPress selecciona automáticamente:
+
+- `single-producto.php` para el detalle del producto.
+- `taxonomy-categoria_producto.php` para categorías como `/categoria/juguetes/peluches/`.
+- `archive-producto.php` para `/productos/`.
+
+El tema refresca las reglas de rewrite una sola vez mediante una versión interna. Si aun así alguna ruta antigua queda en caché, ir a **Ajustes → Enlaces permanentes** y guardar una vez.
+
+Para facilitar pruebas locales, el tema crea una vez, solo para administradores, términos base (`Juguetes`, `Peluches`, `Paseo`) y productos de ejemplo (`Oso de peluche`, `Coche de bebé`) si todavía no existen.
+
+---
+
 ## Agregar estilos nuevos
 
 1. Crear `assets/scss/components/_nuevo-componente.scss`.

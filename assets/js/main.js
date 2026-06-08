@@ -21,6 +21,9 @@
       this.lazyImages.init();
       this.stickyHeader.init();
       this.heroSlider.init();
+      this.productGallery.init();
+      this.productQuantity.init();
+      this.plushiesFilters.init();
       this.testimonialsSlider.init();
     },
 
@@ -210,7 +213,354 @@
       },
     },
 
+    // --- Modulo: galeria de producto -----------------------------------------
+
+    productGallery: {
+      galleries: [],
+
+      init() {
+        this.galleries = Array.from( document.querySelectorAll( '[data-product-gallery]' ) );
+        if ( ! this.galleries.length ) return;
+
+        this.galleries.forEach( ( gallery ) => this.setupGallery( gallery ) );
+      },
+
+      setupGallery( gallery ) {
+        const mainImage = gallery.querySelector( '[data-product-gallery-image]' );
+        const thumbs    = Array.from( gallery.querySelectorAll( '[data-product-gallery-thumb]' ) );
+        const prevBtn   = gallery.querySelector( '[data-product-gallery-prev]' );
+        const nextBtn   = gallery.querySelector( '[data-product-gallery-next]' );
+
+        if ( ! mainImage || ! thumbs.length ) return;
+
+        let current = thumbs.findIndex( ( thumb ) => thumb.classList.contains( 'is-active' ) );
+        current = current >= 0 ? current : 0;
+
+        const goTo = ( index ) => {
+          const total = thumbs.length;
+          current = ( index + total ) % total;
+
+          thumbs.forEach( ( thumb, thumbIndex ) => {
+            const isActive = thumbIndex === current;
+            thumb.classList.toggle( 'is-active', isActive );
+            thumb.setAttribute( 'aria-current', String( isActive ) );
+          } );
+
+          const activeThumb = thumbs[ current ];
+          const imageUrl = activeThumb.dataset.galleryImage;
+          if ( imageUrl ) {
+            mainImage.src = imageUrl;
+          }
+          if ( activeThumb.dataset.galleryAlt ) {
+            mainImage.alt = activeThumb.dataset.galleryAlt;
+          }
+        };
+
+        thumbs.forEach( ( thumb, index ) => {
+          thumb.addEventListener( 'click', () => goTo( index ) );
+        } );
+
+        if ( prevBtn ) {
+          prevBtn.addEventListener( 'click', () => goTo( current - 1 ) );
+        }
+
+        if ( nextBtn ) {
+          nextBtn.addEventListener( 'click', () => goTo( current + 1 ) );
+        }
+
+        goTo( current );
+      },
+    },
+
+    // --- Modulo: cantidad de producto ----------------------------------------
+
+    productQuantity: {
+      controls: [],
+
+      init() {
+        this.controls = Array.from( document.querySelectorAll( '[data-product-quantity]' ) );
+        if ( ! this.controls.length ) return;
+
+        this.controls.forEach( ( control ) => this.setupControl( control ) );
+      },
+
+      setupControl( control ) {
+        const input = control.querySelector( '[data-product-quantity-input]' );
+        const decreaseBtn = control.querySelector( '[data-product-quantity-decrease]' );
+        const increaseBtn = control.querySelector( '[data-product-quantity-increase]' );
+        const actions = control.closest( '.product-actions' );
+        const whatsappLink = actions ? actions.querySelector( '[data-product-whatsapp]' ) : null;
+
+        if ( ! input || ! decreaseBtn || ! increaseBtn ) return;
+
+        const min = Number.parseInt( input.getAttribute( 'min' ), 10 ) || 1;
+
+        const updateWhatsappLink = () => {
+          if ( ! whatsappLink || ! whatsappLink.dataset.whatsappMessage ) return;
+
+          const quantity = Number.parseInt( input.value, 10 ) || min;
+          const message = whatsappLink.dataset.whatsappMessage.replace( /Cantidad:\s*\d+/u, `Cantidad: ${ quantity }` );
+          whatsappLink.href = `https://wa.me/?text=${ encodeURIComponent( message ) }`;
+        };
+
+        const normalize = () => {
+          const value = Number.parseInt( input.value, 10 );
+          input.value = String( Number.isNaN( value ) ? min : Math.max( min, value ) );
+          updateWhatsappLink();
+        };
+
+        decreaseBtn.addEventListener( 'click', () => {
+          normalize();
+          input.value = String( Math.max( min, Number.parseInt( input.value, 10 ) - 1 ) );
+          updateWhatsappLink();
+          input.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+        } );
+
+        increaseBtn.addEventListener( 'click', () => {
+          normalize();
+          input.value = String( Number.parseInt( input.value, 10 ) + 1 );
+          updateWhatsappLink();
+          input.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+        } );
+
+        input.addEventListener( 'change', normalize );
+        input.addEventListener( 'blur', normalize );
+        normalize();
+      },
+    },
+
+    // --- Modulo: filtros de peluches -----------------------------------------
+
+    plushiesFilters: {
+      roots: [],
+
+      init() {
+        this.roots = Array.from( document.querySelectorAll( '[data-plushies-listing]' ) );
+        if ( ! this.roots.length ) return;
+
+        this.roots.forEach( ( root ) => this.setupFilters( root ) );
+      },
+
+      setupFilters( root ) {
+        const layout = root.querySelector( '.plushies-layout' );
+        const grid = root.querySelector( '[data-filter-grid]' );
+        const cards = Array.from( root.querySelectorAll( '[data-filter-card]' ) );
+        const count = root.querySelector( '[data-filter-count]' );
+        const empty = root.querySelector( '[data-filter-empty]' );
+        const toggle = root.querySelector( '[data-filter-toggle]' );
+        const clear = root.querySelector( '[data-filter-clear]' );
+        const sort = root.querySelector( '[data-filter-sort]' );
+        const priceMax = root.querySelector( '[data-filter-price-max]' );
+        const priceLabel = root.querySelector( '[data-filter-price-label]' );
+        const pagination = root.querySelector( '[data-filter-pagination]' );
+        const categoryButtons = Array.from( root.querySelectorAll( '[data-filter-category]' ) );
+        const colorButtons = Array.from( root.querySelectorAll( '[data-filter-color]' ) );
+        const checkboxes = Array.from( root.querySelectorAll( '[data-filter-checkbox]' ) );
+        const viewButtons = Array.from( root.querySelectorAll( '[data-view-mode]' ) );
+
+        if ( ! grid || ! cards.length ) return;
+
+        let currentPage = 1;
+        const pageSize = 16;
+
+        const formatCurrency = ( value ) => `$${ Number( value ).toLocaleString( 'es-CO' ) }`;
+
+        const getCheckedValues = ( type ) => checkboxes
+          .filter( ( checkbox ) => checkbox.dataset.filterCheckbox === type && checkbox.checked )
+          .map( ( checkbox ) => checkbox.value );
+
+        const getActiveCategory = () => {
+          const active = categoryButtons.find( ( button ) => button.classList.contains( 'is-active' ) );
+          return active ? active.dataset.filterCategory : 'all';
+        };
+
+        const getActiveColors = () => colorButtons
+          .filter( ( button ) => button.classList.contains( 'is-active' ) )
+          .map( ( button ) => button.dataset.filterColor );
+
+        const matchesAny = ( value, selectedValues ) => ! selectedValues.length || selectedValues.includes( value );
+
+        const sortCards = ( visibleCards ) => {
+          const mode = sort ? sort.value : 'popular';
+          const sorted = [ ...visibleCards ];
+
+          sorted.sort( ( cardA, cardB ) => {
+            if ( 'price-asc' === mode ) return Number( cardA.dataset.price ) - Number( cardB.dataset.price );
+            if ( 'price-desc' === mode ) return Number( cardB.dataset.price ) - Number( cardA.dataset.price );
+            if ( 'name-asc' === mode ) return cardA.dataset.name.localeCompare( cardB.dataset.name, 'es' );
+          return Number( cardB.dataset.popularity ) - Number( cardA.dataset.popularity );
+          } );
+
+          return sorted;
+        };
+
+        const renderPagination = ( totalPages ) => {
+          if ( ! pagination ) return;
+
+          pagination.innerHTML = '';
+          pagination.hidden = totalPages <= 1;
+
+          if ( totalPages <= 1 ) return;
+
+          const createButton = ( label, page, options = {} ) => {
+            const button = document.createElement( 'button' );
+            button.type = 'button';
+            button.textContent = label;
+            button.dataset.filterPage = String( page );
+            if ( options.ariaLabel ) button.setAttribute( 'aria-label', options.ariaLabel );
+            if ( options.current ) button.classList.add( 'is-current' );
+            if ( options.disabled ) button.disabled = true;
+            button.addEventListener( 'click', () => {
+              if ( button.disabled ) return;
+              currentPage = page;
+              applyFilters( { preservePage: true } );
+            } );
+            return button;
+          };
+
+          pagination.appendChild(
+            createButton( '‹', Math.max( 1, currentPage - 1 ), {
+              ariaLabel: 'Página anterior',
+              disabled: currentPage <= 1,
+            } )
+          );
+
+          for ( let page = 1; page <= totalPages; page += 1 ) {
+            pagination.appendChild(
+              createButton( String( page ), page, {
+                current: page === currentPage,
+              } )
+            );
+          }
+
+          pagination.appendChild(
+            createButton( '›', Math.min( totalPages, currentPage + 1 ), {
+              ariaLabel: 'Página siguiente',
+              disabled: currentPage >= totalPages,
+            } )
+          );
+        };
+
+        const applyFilters = ( options = {} ) => {
+          if ( ! options.preservePage ) {
+            currentPage = 1;
+          }
+
+          const activeCategory = getActiveCategory();
+          const activeColors = getActiveColors();
+          const selectedAges = getCheckedValues( 'age' );
+          const selectedSizes = getCheckedValues( 'size' );
+          const selectedMaterials = getCheckedValues( 'material' );
+          const maxPrice = priceMax ? Number( priceMax.value ) : Number.POSITIVE_INFINITY;
+
+          if ( priceLabel && priceMax ) {
+            priceLabel.textContent = formatCurrency( priceMax.value );
+          }
+
+          const visibleCards = cards.filter( ( card ) => {
+            const categoryMatches = 'all' === activeCategory || card.dataset.category === activeCategory;
+            const priceMatches = Number( card.dataset.price ) <= maxPrice;
+            const ageMatches = matchesAny( card.dataset.age, selectedAges );
+            const sizeMatches = matchesAny( card.dataset.size, selectedSizes );
+            const colorMatches = matchesAny( card.dataset.color, activeColors );
+            const materialMatches = matchesAny( card.dataset.material, selectedMaterials );
+
+            return categoryMatches && priceMatches && ageMatches && sizeMatches && colorMatches && materialMatches;
+          } );
+
+          const sortedCards = sortCards( visibleCards );
+          const totalPages = Math.max( 1, Math.ceil( sortedCards.length / pageSize ) );
+          currentPage = Math.min( currentPage, totalPages );
+
+          const pageStart = ( currentPage - 1 ) * pageSize;
+          const pageEnd = pageStart + pageSize;
+          const pageCards = sortedCards.slice( pageStart, pageEnd );
+
+          cards.forEach( ( card ) => {
+            card.hidden = ! pageCards.includes( card );
+          } );
+
+          sortedCards.forEach( ( card ) => grid.appendChild( card ) );
+
+          if ( count ) {
+            if ( sortedCards.length ) {
+              count.textContent = `Mostrando ${ pageStart + 1 }-${ Math.min( pageEnd, sortedCards.length ) } de ${ sortedCards.length } productos`;
+            } else {
+              count.textContent = `Mostrando 0 de ${ cards.length } productos`;
+            }
+          }
+
+          if ( empty ) {
+            empty.hidden = sortedCards.length > 0;
+          }
+
+          renderPagination( totalPages );
+        };
+
+        categoryButtons.forEach( ( button ) => {
+          button.addEventListener( 'click', () => {
+            categoryButtons.forEach( ( item ) => item.classList.remove( 'is-active' ) );
+            button.classList.add( 'is-active' );
+            applyFilters();
+          } );
+        } );
+
+        colorButtons.forEach( ( button ) => {
+          button.addEventListener( 'click', () => {
+            button.classList.toggle( 'is-active' );
+            applyFilters();
+          } );
+        } );
+
+        checkboxes.forEach( ( checkbox ) => {
+          checkbox.addEventListener( 'change', applyFilters );
+        } );
+
+        if ( priceMax ) {
+          priceMax.addEventListener( 'input', applyFilters );
+        }
+
+        if ( sort ) {
+          sort.addEventListener( 'change', applyFilters );
+        }
+
+        viewButtons.forEach( ( button ) => {
+          button.addEventListener( 'click', () => {
+            const mode = button.dataset.viewMode || 'grid';
+            viewButtons.forEach( ( item ) => item.classList.toggle( 'is-active', item === button ) );
+            grid.classList.toggle( 'is-list-view', 'list' === mode );
+            grid.classList.toggle( 'is-grid-view', 'grid' === mode );
+          } );
+        } );
+
+        if ( clear ) {
+          clear.addEventListener( 'click', () => {
+            categoryButtons.forEach( ( button ) => button.classList.toggle( 'is-active', 'all' === button.dataset.filterCategory ) );
+            colorButtons.forEach( ( button ) => button.classList.remove( 'is-active' ) );
+            checkboxes.forEach( ( checkbox ) => {
+              checkbox.checked = false;
+            } );
+            if ( priceMax ) priceMax.value = priceMax.max;
+            if ( sort ) sort.value = 'popular';
+            applyFilters();
+          } );
+        }
+
+        if ( toggle && layout ) {
+          toggle.addEventListener( 'click', () => {
+            const isHidden = layout.classList.toggle( 'is-filter-hidden' );
+            toggle.setAttribute( 'aria-expanded', String( ! isHidden ) );
+            const label = toggle.querySelector( 'span' );
+            if ( label ) label.textContent = isHidden ? 'Mostrar filtros' : 'Ocultar filtros';
+          } );
+        }
+
+        applyFilters();
+      },
+    },
+
     // --- Modulo: carrusel de testimonios ------------------------------------
+
 
     testimonialsSlider: {
       root:    null,
