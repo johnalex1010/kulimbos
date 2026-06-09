@@ -211,6 +211,35 @@
     letter-spacing: 0;
   }
 
+  &__categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 8px 14px;
+      border: 1px solid rgba(232, 25, 44, 0.12);
+      border-radius: var(--radius-full);
+      background: #fff4ef;
+      color: var(--color-primary);
+      font-size: 0.88rem;
+      font-weight: var(--font-weight-extrabold);
+      line-height: 1;
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        border-color: rgba(232, 25, 44, 0.28);
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+    }
+  }
+
   &__rating,
   &__price-row {
     display: flex;
@@ -262,7 +291,7 @@
 
   &__features {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 20px;
     margin: 28px 0 0;
     padding: 26px 0 0;
@@ -331,6 +360,11 @@
     background: #efe2f7;
     color: #a266cb;
   }
+
+  &--sage .product-feature__icon {
+    background: #e5f6df;
+    color: #5a9d37;
+  }
 }
 
 .product-actions {
@@ -360,6 +394,13 @@
     background: var(--color-primary);
     color: #ffffff;
     box-shadow: 0 14px 24px rgba(232, 25, 44, 0.2);
+
+    &:disabled {
+      background: #d9dce3;
+      color: #ffffff;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
   }
 
   &__whatsapp {
@@ -390,6 +431,15 @@
     color: #17182b;
     font-size: 0.98rem;
     font-weight: var(--font-weight-extrabold);
+
+    small {
+      display: block;
+      margin-top: 4px;
+      color: #6b7484;
+      font-size: 0.78rem;
+      font-weight: var(--font-weight-semibold);
+      line-height: 1.2;
+    }
   }
 
   &__control {
@@ -416,21 +466,34 @@
 
     button {
       cursor: pointer;
+
+      &:disabled {
+        color: #a8b0bd;
+        cursor: not-allowed;
+      }
     }
 
     input {
       appearance: textfield;
+
+      &:disabled {
+        color: #7b8495;
+        cursor: not-allowed;
+      }
     }
   }
 }
 
 .product-shipping {
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
-  margin-top: 24px;
-  padding: 18px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 2px;
+  padding: 24px 28px;
   border: 1px solid #ffe4bd;
   border-radius: 16px;
   background: #fff9ef;

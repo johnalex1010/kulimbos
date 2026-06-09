@@ -293,7 +293,18 @@
 
         if ( ! input || ! decreaseBtn || ! increaseBtn ) return;
 
-        const min = Number.parseInt( input.getAttribute( 'min' ), 10 ) || 1;
+        const minAttribute = Number.parseInt( input.getAttribute( 'min' ), 10 );
+        const min = Number.isNaN( minAttribute ) ? 1 : minAttribute;
+        const maxAttribute = Number.parseInt( input.getAttribute( 'max' ), 10 );
+        const max = Number.isNaN( maxAttribute ) ? Number.POSITIVE_INFINITY : Math.max( min, maxAttribute );
+
+        const clampQuantity = ( value ) => Math.min( max, Math.max( min, value ) );
+
+        const updateButtonState = () => {
+          const quantity = Number.parseInt( input.value, 10 ) || min;
+          decreaseBtn.disabled = quantity <= min || input.disabled;
+          increaseBtn.disabled = quantity >= max || input.disabled;
+        };
 
         const updateWhatsappLink = () => {
           if ( ! whatsappLink || ! whatsappLink.dataset.whatsappMessage ) return;
@@ -305,21 +316,24 @@
 
         const normalize = () => {
           const value = Number.parseInt( input.value, 10 );
-          input.value = String( Number.isNaN( value ) ? min : Math.max( min, value ) );
+          input.value = String( Number.isNaN( value ) ? min : clampQuantity( value ) );
           updateWhatsappLink();
+          updateButtonState();
         };
 
         decreaseBtn.addEventListener( 'click', () => {
           normalize();
-          input.value = String( Math.max( min, Number.parseInt( input.value, 10 ) - 1 ) );
+          input.value = String( clampQuantity( Number.parseInt( input.value, 10 ) - 1 ) );
           updateWhatsappLink();
+          updateButtonState();
           input.dispatchEvent( new Event( 'change', { bubbles: true } ) );
         } );
 
         increaseBtn.addEventListener( 'click', () => {
           normalize();
-          input.value = String( Number.parseInt( input.value, 10 ) + 1 );
+          input.value = String( clampQuantity( Number.parseInt( input.value, 10 ) + 1 ) );
           updateWhatsappLink();
+          updateButtonState();
           input.dispatchEvent( new Event( 'change', { bubbles: true } ) );
         } );
 

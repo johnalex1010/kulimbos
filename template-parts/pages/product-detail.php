@@ -22,6 +22,17 @@ $main_product = array(
 	'description' => __('Suave, tierno y perfecto para abrazar. Acompaña a tu pequeño en todas sus aventuras y momentos especiales.', 'kulimbos'),
 );
 
+$product_categories = array(
+	array(
+		'name' => __('Juguetes', 'kulimbos'),
+		'url'  => home_url('/categoria/juguetes/'),
+	),
+	array(
+		'name' => __('Peluches', 'kulimbos'),
+		'url'  => home_url('/categoria/peluches/'),
+	),
+);
+
 if (is_singular('producto')) {
 	$product_id    = get_queried_object_id();
 	$product_price = get_post_meta($product_id, 'kulimbos_product_price', true);
@@ -48,28 +59,110 @@ if (is_singular('producto')) {
 		'stock'       => $product_stock,
 		'description' => $product_desc ?: __('Producto disponible en Kulimbos.', 'kulimbos'),
 	);
+
+	$product_categories = array();
+	$assigned_terms = get_the_terms($product_id, 'categoria_producto');
+
+	if (! empty($assigned_terms) && ! is_wp_error($assigned_terms)) {
+		$category_map = array();
+
+		foreach ($assigned_terms as $assigned_term) {
+			foreach (array_reverse(get_ancestors($assigned_term->term_id, 'categoria_producto')) as $ancestor_id) {
+				$ancestor = get_term($ancestor_id, 'categoria_producto');
+
+				if ($ancestor instanceof WP_Term) {
+					$category_map[$ancestor->term_id] = $ancestor;
+				}
+			}
+
+			$category_map[$assigned_term->term_id] = $assigned_term;
+		}
+
+		foreach ($category_map as $category_term) {
+			$category_link = get_term_link($category_term);
+
+			if (! is_wp_error($category_link)) {
+				$product_categories[] = array(
+					'name' => $category_term->name,
+					'url'  => $category_link,
+				);
+			}
+		}
+	}
 }
 
-$features = array(
-	array(
-		'icon'  => 'heart',
-		'title' => __('Material', 'kulimbos'),
-		'text'  => __('Suave y seguro', 'kulimbos'),
+$feature_taxonomies = array(
+	'edad_producto'     => array(
+		'icon'  => 'smile',
+		'title' => __('Edad recomendada', 'kulimbos'),
 		'color' => 'coral',
 	),
-	array(
-		'icon'  => 'shield-check',
-		'title' => __('Hipoalergénico', 'kulimbos'),
-		'text'  => __('Seguro para tu bebé', 'kulimbos'),
+	'tamano_producto'   => array(
+		'icon'  => 'tag',
+		'title' => __('Tamaño', 'kulimbos'),
 		'color' => 'mint',
 	),
-	array(
-		'icon'  => 'package',
-		'title' => __('Lavable', 'kulimbos'),
-		'text'  => __('A mano o en lavadora', 'kulimbos'),
+	'color_producto'    => array(
+		'icon'  => 'sparkles',
+		'title' => __('Color', 'kulimbos'),
 		'color' => 'purple',
 	),
+	'material_producto' => array(
+		'icon'  => 'package',
+		'title' => __('Material', 'kulimbos'),
+		'color' => 'sage',
+	),
 );
+
+$features = array();
+
+if (is_singular('producto')) {
+	$product_id = get_queried_object_id();
+
+	foreach ($feature_taxonomies as $taxonomy => $feature_data) {
+		$terms = get_the_terms($product_id, $taxonomy);
+
+		if (empty($terms) || is_wp_error($terms)) {
+			continue;
+		}
+
+		$term_names = wp_list_pluck($terms, 'name');
+
+		$features[] = array(
+			'icon'  => $feature_data['icon'],
+			'title' => $feature_data['title'],
+			'text'  => implode(', ', array_map('sanitize_text_field', $term_names)),
+			'color' => $feature_data['color'],
+		);
+	}
+} else {
+	$features = array(
+		array(
+			'icon'  => 'smile',
+			'title' => __('Edad recomendada', 'kulimbos'),
+			'text'  => __('0 a 1 años', 'kulimbos'),
+			'color' => 'coral',
+		),
+		array(
+			'icon'  => 'tag',
+			'title' => __('Tamaño', 'kulimbos'),
+			'text'  => __('Mediano (20 a 35 cm)', 'kulimbos'),
+			'color' => 'mint',
+		),
+		array(
+			'icon'  => 'sparkles',
+			'title' => __('Color', 'kulimbos'),
+			'text'  => __('Café', 'kulimbos'),
+			'color' => 'purple',
+		),
+		array(
+			'icon'  => 'package',
+			'title' => __('Material', 'kulimbos'),
+			'text'  => __('Felpa suave', 'kulimbos'),
+			'color' => 'sage',
+		),
+	);
+}
 
 $thumbs = array(
 	array(
@@ -240,15 +333,19 @@ $fallback_image_path     = $theme_dir . '/assets/img/products/' . $fallback_imag
 $fallback_image_url      = $theme_uri . '/assets/img/products/' . $fallback_image_filename;
 $main_image_path         = ! empty($main_product['image']) ? $theme_dir . '/assets/img/products/' . sanitize_file_name($main_product['image']) : $fallback_image_path;
 $main_image_url          = ! empty($main_product['image_url']) ? $main_product['image_url'] : (! empty($main_product['image']) ? $theme_uri . '/assets/img/products/' . sanitize_file_name($main_product['image']) : $fallback_image_url);
+$product_stock   = max(0, (int) $main_product['stock']);
+$quantity_min    = $product_stock > 0 ? 1 : 0;
+$quantity_value  = $product_stock > 0 ? 1 : 0;
 $product_url     = get_permalink() ?: home_url('/productos/oso-de-peluche/');
 $whatsapp_message = sprintf(
 	__(
-		"Hola, estoy interesado en este producto:\n\nProducto: %1\$s\nPrecio: %2\$s COP\nURL: %3\$s\nCantidad: 1",
+		"Hola, estoy interesado en este producto:\n\nProducto: %1\$s\nPrecio: %2\$s COP\nURL: %3\$s\nCantidad: %4\$s",
 		'kulimbos'
 	),
 	$main_product['name'],
 	$main_product['price'],
-	$product_url
+	$product_url,
+	$quantity_value
 );
 $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 ?>
@@ -338,6 +435,14 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 			<div class="product-summary">
 				<h1 class="product-summary__title" id="product-detail-title"><?php echo esc_html($main_product['name']); ?></h1>
 
+				<?php if (! empty($product_categories)) : ?>
+					<nav class="product-summary__categories" aria-label="<?php esc_attr_e('Categorías del producto', 'kulimbos'); ?>">
+						<?php foreach ($product_categories as $category) : ?>
+							<a href="<?php echo esc_url($category['url']); ?>"><?php echo esc_html($category['name']); ?></a>
+						<?php endforeach; ?>
+					</nav>
+				<?php endif; ?>
+
 				<div class="product-summary__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $main_product['rating'])); ?>">
 					<?php for ($i = 0; $i < 5; $i++) : ?>
 						<span class="star <?php echo esc_attr($i < floor($main_product['rating']) ? 'star--full' : 'star--empty'); ?>" aria-hidden="true"><?php kulimbos_the_icon('star', '', 24); ?></span>
@@ -354,28 +459,41 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 
 				<p class="product-summary__description"><?php echo esc_html($main_product['description']); ?></p>
 
-				<ul class="product-summary__features" role="list">
-					<?php foreach ($features as $feature) : ?>
-						<li class="product-feature product-feature--<?php echo esc_attr($feature['color']); ?>">
-							<span class="product-feature__icon" aria-hidden="true">
-								<?php kulimbos_the_icon($feature['icon'], '', 38); ?>
-							</span>
-							<strong><?php echo esc_html($feature['title']); ?></strong>
-							<span><?php echo esc_html($feature['text']); ?></span>
-						</li>
-					<?php endforeach; ?>
-				</ul>
+				<?php if (! empty($features)) : ?>
+					<ul class="product-summary__features" role="list">
+						<?php foreach ($features as $feature) : ?>
+							<li class="product-feature product-feature--<?php echo esc_attr($feature['color']); ?>">
+								<span class="product-feature__icon" aria-hidden="true">
+									<?php kulimbos_the_icon($feature['icon'], '', 38); ?>
+								</span>
+								<strong><?php echo esc_html($feature['title']); ?></strong>
+								<span><?php echo esc_html($feature['text']); ?></span>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				<?php endif; ?>
 
 				<div class="product-actions" aria-label="<?php esc_attr_e('Compra del producto', 'kulimbos'); ?>">
 					<div class="product-quantity">
-						<span><?php esc_html_e('Cantidad:', 'kulimbos'); ?></span>
+						<span>
+							<?php esc_html_e('Cantidad:', 'kulimbos'); ?>
+							<small><?php echo esc_html(sprintf(_n('%s disponible', '%s disponibles', $product_stock, 'kulimbos'), number_format_i18n($product_stock))); ?></small>
+						</span>
 						<div class="product-quantity__control" data-product-quantity>
-							<button type="button" data-product-quantity-decrease aria-label="<?php esc_attr_e('Disminuir cantidad', 'kulimbos'); ?>">−</button>
-							<input type="number" value="1" min="1" inputmode="numeric" data-product-quantity-input aria-label="<?php esc_attr_e('Cantidad del producto', 'kulimbos'); ?>">
-							<button type="button" data-product-quantity-increase aria-label="<?php esc_attr_e('Aumentar cantidad', 'kulimbos'); ?>">+</button>
+							<button type="button" data-product-quantity-decrease aria-label="<?php esc_attr_e('Disminuir cantidad', 'kulimbos'); ?>" <?php disabled(0 === $product_stock); ?>>−</button>
+							<input
+								type="number"
+								value="<?php echo esc_attr($quantity_value); ?>"
+								min="<?php echo esc_attr($quantity_min); ?>"
+								max="<?php echo esc_attr($product_stock); ?>"
+								inputmode="numeric"
+								data-product-quantity-input
+								aria-label="<?php esc_attr_e('Cantidad del producto', 'kulimbos'); ?>"
+								<?php disabled(0 === $product_stock); ?>>
+							<button type="button" data-product-quantity-increase aria-label="<?php esc_attr_e('Aumentar cantidad', 'kulimbos'); ?>" <?php disabled(0 === $product_stock); ?>>+</button>
 						</div>
 					</div>
-					<button class="product-actions__cart" type="button">
+					<button class="product-actions__cart" type="button" <?php disabled(0 === $product_stock); ?>>
 						<?php kulimbos_the_icon('shopping-cart', '', 24); ?>
 						<span><?php esc_html_e('Agregar al carrito', 'kulimbos'); ?></span>
 					</button>
@@ -390,15 +508,15 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 						<span><?php esc_html_e('WhatsApp', 'kulimbos'); ?></span>
 					</a>
 				</div>
+			</div>
 
-				<div class="product-shipping">
-					<?php kulimbos_the_icon('truck', '', 34); ?>
-					<div>
-						<strong><?php esc_html_e('Envíos rápidos a todo Colombia', 'kulimbos'); ?></strong>
-						<span><?php esc_html_e('Recíbelo entre 1 y 3 días hábiles', 'kulimbos'); ?></span>
-					</div>
-					<a href="<?php echo esc_url(home_url('/envios/')); ?>"><?php esc_html_e('Ver métodos de envío', 'kulimbos'); ?></a>
+			<div class="product-shipping">
+				<?php kulimbos_the_icon('truck', '', 34); ?>
+				<div>
+					<strong><?php esc_html_e('Envíos rápidos a todo Colombia', 'kulimbos'); ?></strong>
+					<span><?php esc_html_e('Recíbelo entre 1 y 3 días hábiles', 'kulimbos'); ?></span>
 				</div>
+				<a href="<?php echo esc_url(home_url('/envios/')); ?>"><?php esc_html_e('Ver métodos de envío', 'kulimbos'); ?></a>
 			</div>
 		</div>
 
