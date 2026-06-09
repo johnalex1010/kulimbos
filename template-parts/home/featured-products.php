@@ -67,7 +67,7 @@ $products = array(
 			<h2 class="home-section__title" id="featured-products-title">
 				<?php esc_html_e('Productos destacados', 'kulimbos'); ?>
 			</h2>
-			<a class="home-section__link" href="<?php echo esc_url(home_url('/productos/')); ?>">
+			<a class="home-section__link" href="<?php echo esc_url(home_url('/categorias/')); ?>">
 				<?php esc_html_e('Ver todos', 'kulimbos'); ?>
 				<?php kulimbos_the_icon('chevron-right', '', 16); ?>
 			</a>

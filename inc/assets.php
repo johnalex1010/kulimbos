@@ -33,13 +33,13 @@ function kulimbos_enqueue_assets(): void {
 	$css_uri  = get_template_directory_uri() . $css_relative;
 	$dist_js  = get_template_directory() . '/assets/production/minjs/main.min.js';
 
-	// Versión basada en filemtime en dev (invalida caché al compilar) o estática en prod.
+	// CSS conserva la estrategia por entorno; JS usa filemtime para invalidar caché al compilar.
 	$css_version = file_exists( $css_path )
 		? ( $is_debug ? filemtime( $css_path ) : KULIMBOS_VERSION )
 		: KULIMBOS_VERSION;
 
 	$js_version = file_exists( $dist_js )
-		? ( $is_debug ? filemtime( $dist_js ) : KULIMBOS_VERSION )
+		? filemtime( $dist_js )
 		: KULIMBOS_VERSION;
 
 	// Estilo principal compilado por Gulp.

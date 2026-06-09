@@ -458,7 +458,8 @@
           }
 
           const visibleCards = cards.filter( ( card ) => {
-            const categoryMatches = 'all' === activeCategory || card.dataset.category === activeCategory;
+            const cardCategories = ( card.dataset.categories || card.dataset.category || '' ).split( ' ' );
+            const categoryMatches = 'all' === activeCategory || cardCategories.includes( activeCategory );
             const priceMatches = Number( card.dataset.price ) <= maxPrice;
             const ageMatches = matchesAny( card.dataset.age, selectedAges );
             const sizeMatches = matchesAny( card.dataset.size, selectedSizes );

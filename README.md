@@ -91,6 +91,7 @@ El tema no requiere variables de entorno propias. Usa las constantes nativas de 
 |-----------|-------------------|
 | `WP_DEBUG true` | Carga `assets/css/main.css` con versión `filemtime()`. Permite inspeccionar el CSS sin ofuscar. |
 | `WP_DEBUG false` | Carga `assets/production/mincss/main.min.css` con versión estática `KULIMBOS_VERSION`. |
+| JS principal | Carga `assets/production/minjs/main.min.js` con versión `filemtime()` para invalidar caché después de cada build. |
 
 ---
 

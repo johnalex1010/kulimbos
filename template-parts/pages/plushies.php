@@ -8,6 +8,9 @@
 
 defined('ABSPATH') || exit;
 
+$catalog_mode         = isset($args['catalog_mode']) ? sanitize_key($args['catalog_mode']) : '';
+$is_all_products_view = 'all-products' === $catalog_mode;
+
 $theme_uri = get_template_directory_uri();
 $theme_dir = get_template_directory();
 
@@ -17,9 +20,13 @@ $hero_image = array(
 	'alt'  => __('Peluches suaves para bebés y niños', 'kulimbos'),
 );
 
-$page_title       = __('Peluches', 'kulimbos');
+$page_title       = $is_all_products_view ? __('Categorías', 'kulimbos') : __('Peluches', 'kulimbos');
 $page_description = __('Compañeros suaves y tiernos para abrazar, jugar y crear momentos inolvidables.', 'kulimbos');
-$current_term     = is_tax('categoria_producto') ? get_queried_object() : null;
+$current_term     = (! $is_all_products_view && is_tax('categoria_producto')) ? get_queried_object() : null;
+
+if ($is_all_products_view) {
+	$page_description = __('Explora todos los productos disponibles en Kulimbos sin importar su categoría.', 'kulimbos');
+}
 
 if ($current_term instanceof WP_Term) {
 	$page_title       = $current_term->name;
@@ -224,10 +231,10 @@ $products = array(
 	),
 );
 
-if (is_post_type_archive('producto') || is_tax('categoria_producto')) {
+if ($is_all_products_view || is_post_type_archive('producto') || is_tax('categoria_producto')) {
 	$query_args = array(
 		'post_type'      => 'producto',
-		'posts_per_page' => 36,
+		'posts_per_page' => $is_all_products_view ? -1 : 36,
 		'orderby'        => 'date',
 		'order'          => 'DESC',
 	);
@@ -235,9 +242,10 @@ if (is_post_type_archive('producto') || is_tax('categoria_producto')) {
 	if ($current_term instanceof WP_Term) {
 		$query_args['tax_query'] = array(
 			array(
-				'taxonomy' => 'categoria_producto',
-				'field'    => 'term_id',
-				'terms'    => array($current_term->term_id),
+				'taxonomy'         => 'categoria_producto',
+				'field'            => 'term_id',
+				'terms'            => array($current_term->term_id),
+				'include_children' => true,
 			),
 		);
 	}
@@ -252,6 +260,27 @@ if (is_post_type_archive('producto') || is_tax('categoria_producto')) {
 			$product_id    = get_the_ID();
 			$product_term  = function_exists('kulimbos_get_primary_product_category') ? kulimbos_get_primary_product_category($product_id) : null;
 			$product_price = get_post_meta($product_id, 'kulimbos_product_price', true);
+			$product_terms = get_the_terms($product_id, 'categoria_producto');
+			$product_categories = array();
+
+			if (! empty($product_terms) && ! is_wp_error($product_terms)) {
+				foreach ($product_terms as $assigned_term) {
+					if (! ($assigned_term instanceof WP_Term)) {
+						continue;
+					}
+
+					$product_categories[] = $assigned_term->slug;
+
+					foreach (get_ancestors($assigned_term->term_id, 'categoria_producto') as $ancestor_id) {
+						$ancestor = get_term($ancestor_id, 'categoria_producto');
+						if ($ancestor instanceof WP_Term) {
+							$product_categories[] = $ancestor->slug;
+						}
+					}
+				}
+			}
+
+			$product_categories = array_values(array_unique(array_map('sanitize_title', $product_categories)));
 
 			$products[] = array(
 				'image'     => '',
@@ -259,6 +288,7 @@ if (is_post_type_archive('producto') || is_tax('categoria_producto')) {
 				'alt'       => get_the_title(),
 				'name'      => get_the_title(),
 				'category'  => $product_term instanceof WP_Term ? $product_term->slug : 'sin-categoria',
+				'categories' => ! empty($product_categories) ? $product_categories : array('sin-categoria'),
 				'age'       => sanitize_key(get_post_meta($product_id, 'kulimbos_product_age', true) ?: '0-1'),
 				'size'      => sanitize_key(get_post_meta($product_id, 'kulimbos_product_size', true) ?: 'mediano'),
 				'color'     => sanitize_key(get_post_meta($product_id, 'kulimbos_product_color', true) ?: 'cafe'),
@@ -277,7 +307,20 @@ if (is_post_type_archive('producto') || is_tax('categoria_producto')) {
 $category_filter_terms = array();
 $category_filter_label = __('Todos los peluches', 'kulimbos');
 
-if ($current_term instanceof WP_Term) {
+if ($is_all_products_view) {
+	$category_filter_label = __('Todas las categorías', 'kulimbos');
+	$top_level_terms       = get_terms(
+		array(
+			'taxonomy'   => 'categoria_producto',
+			'parent'     => 0,
+			'hide_empty' => false,
+		)
+	);
+
+	if (! is_wp_error($top_level_terms) && ! empty($top_level_terms)) {
+		$category_filter_terms = $top_level_terms;
+	}
+} elseif ($current_term instanceof WP_Term) {
 	$category_filter_label = sprintf(
 		/* translators: %s: category name. */
 		__('Todos en %s', 'kulimbos'),
@@ -320,6 +363,8 @@ if ($current_term instanceof WP_Term) {
 						<?php endif; ?>
 					<?php endforeach; ?>
 					<li aria-current="page"><?php echo esc_html($current_term->name); ?></li>
+				<?php elseif ($is_all_products_view) : ?>
+					<li aria-current="page"><?php echo esc_html($page_title); ?></li>
 				<?php else : ?>
 					<li><a href="<?php echo esc_url(home_url('/categoria/juguetes/')); ?>"><?php esc_html_e('Juguetes', 'kulimbos'); ?></a></li>
 					<li aria-current="page"><?php esc_html_e('Peluches', 'kulimbos'); ?></li>
@@ -451,11 +496,13 @@ if ($current_term instanceof WP_Term) {
 						<?php
 						$image_path = ! empty($product['image']) ? $theme_dir . '/assets/img/products/' . sanitize_file_name($product['image']) : '';
 						$image_url  = ! empty($product['image_url']) ? $product['image_url'] : (! empty($product['image']) ? $theme_uri . '/assets/img/products/' . sanitize_file_name($product['image']) : '');
+						$product_category_slugs = ! empty($product['categories']) && is_array($product['categories']) ? $product['categories'] : array($product['category']);
 						?>
 						<li
 							class="product-card plushies-card"
 							data-filter-card
 							data-category="<?php echo esc_attr($product['category']); ?>"
+							data-categories="<?php echo esc_attr(implode(' ', array_map('sanitize_title', $product_category_slugs))); ?>"
 							data-age="<?php echo esc_attr($product['age']); ?>"
 							data-size="<?php echo esc_attr($product['size']); ?>"
 							data-color="<?php echo esc_attr($product['color']); ?>"
