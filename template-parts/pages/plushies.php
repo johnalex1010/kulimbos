@@ -260,8 +260,19 @@ if ($is_all_products_view || is_post_type_archive('producto') || is_tax('categor
 			$product_id    = get_the_ID();
 			$product_term  = function_exists('kulimbos_get_primary_product_category') ? kulimbos_get_primary_product_category($product_id) : null;
 			$product_price = get_post_meta($product_id, 'kulimbos_product_price', true);
+			$product_price_value = '' !== $product_price ? (int) preg_replace('/[^\d]/', '', $product_price) : 0;
 			$product_terms = get_the_terms($product_id, 'categoria_producto');
 			$product_categories = array();
+			$product_age = function_exists('kulimbos_get_product_filter_slugs') ? kulimbos_get_product_filter_slugs($product_id, 'edad_producto', 'kulimbos_product_age') : array_filter(array(sanitize_key(get_post_meta($product_id, 'kulimbos_product_age', true))));
+			$product_size = function_exists('kulimbos_get_product_filter_slugs') ? kulimbos_get_product_filter_slugs($product_id, 'tamano_producto', 'kulimbos_product_size') : array_filter(array(sanitize_key(get_post_meta($product_id, 'kulimbos_product_size', true))));
+			$product_color = function_exists('kulimbos_get_product_filter_slugs') ? kulimbos_get_product_filter_slugs($product_id, 'color_producto', 'kulimbos_product_color') : array_filter(array(sanitize_key(get_post_meta($product_id, 'kulimbos_product_color', true))));
+			$product_material = function_exists('kulimbos_get_product_filter_slugs') ? kulimbos_get_product_filter_slugs($product_id, 'material_producto', 'kulimbos_product_material') : array_filter(array(sanitize_key(get_post_meta($product_id, 'kulimbos_product_material', true))));
+			$product_review_summary = function_exists('kulimbos_get_product_review_summary')
+				? kulimbos_get_product_review_summary($product_id)
+				: array(
+					'rating'  => 0,
+					'reviews' => 0,
+				);
 
 			if (! empty($product_terms) && ! is_wp_error($product_terms)) {
 				foreach ($product_terms as $assigned_term) {
@@ -289,13 +300,14 @@ if ($is_all_products_view || is_post_type_archive('producto') || is_tax('categor
 				'name'      => get_the_title(),
 				'category'  => $product_term instanceof WP_Term ? $product_term->slug : 'sin-categoria',
 				'categories' => ! empty($product_categories) ? $product_categories : array('sin-categoria'),
-				'age'       => sanitize_key(get_post_meta($product_id, 'kulimbos_product_age', true) ?: '0-1'),
-				'size'      => sanitize_key(get_post_meta($product_id, 'kulimbos_product_size', true) ?: 'mediano'),
-				'color'     => sanitize_key(get_post_meta($product_id, 'kulimbos_product_color', true) ?: 'cafe'),
-				'material'  => sanitize_key(get_post_meta($product_id, 'kulimbos_product_material', true) ?: 'felpa'),
-				'rating'    => (float) (get_post_meta($product_id, 'kulimbos_product_rating', true) ?: 5),
-				'reviews'   => (int) (get_post_meta($product_id, 'kulimbos_product_reviews', true) ?: 0),
-				'price'     => $product_price ? (int) preg_replace('/[^\d]/', '', $product_price) : 0,
+				'age'       => $product_age,
+				'size'      => $product_size,
+				'color'     => $product_color,
+				'material'  => $product_material,
+				'rating'    => (float) $product_review_summary['rating'],
+				'reviews'   => (int) $product_review_summary['reviews'],
+				'price'     => $product_price_value,
+				'has_price' => '' !== $product_price,
 				'url'       => get_permalink(),
 			);
 		}
@@ -339,6 +351,76 @@ if ($is_all_products_view) {
 		$category_filter_terms = $children;
 	}
 }
+
+$get_filter_options = static function (string $taxonomy, array $fallback): array {
+	$terms = get_terms(
+		array(
+			'taxonomy'   => $taxonomy,
+			'hide_empty' => false,
+			'orderby'    => 'term_order',
+		)
+	);
+
+	if (is_wp_error($terms) || empty($terms)) {
+		return $fallback;
+	}
+
+	return array_map(
+		static function (WP_Term $term): array {
+			return array(
+				'value' => $term->slug,
+				'label' => $term->name,
+				'term_id' => $term->term_id,
+			);
+		},
+		$terms
+	);
+};
+
+$age_filters = $get_filter_options(
+	'edad_producto',
+	array(
+		array('value' => '0-1', 'label' => __('0 a 1 años', 'kulimbos')),
+		array('value' => '1-3', 'label' => __('1 a 3 años', 'kulimbos')),
+		array('value' => '3-6', 'label' => __('3 a 6 años', 'kulimbos')),
+		array('value' => '6-mas', 'label' => __('6+ años', 'kulimbos')),
+	)
+);
+$size_filters = $get_filter_options(
+	'tamano_producto',
+	array(
+		array('value' => 'pequeno', 'label' => __('Pequeño (hasta 20 cm)', 'kulimbos')),
+		array('value' => 'mediano', 'label' => __('Mediano (20 a 35 cm)', 'kulimbos')),
+		array('value' => 'grande', 'label' => __('Grande (35 a 50 cm)', 'kulimbos')),
+		array('value' => 'extra', 'label' => __('Extra grande (50+ cm)', 'kulimbos')),
+	)
+);
+$color_filters = $get_filter_options(
+	'color_producto',
+	array(
+		array('value' => 'cafe', 'label' => __('Café', 'kulimbos')),
+		array('value' => 'rosado', 'label' => __('Rosado', 'kulimbos')),
+		array('value' => 'gris', 'label' => __('Gris', 'kulimbos')),
+		array('value' => 'azul', 'label' => __('Azul', 'kulimbos')),
+		array('value' => 'verde', 'label' => __('Verde', 'kulimbos')),
+	)
+);
+$material_filters = $get_filter_options(
+	'material_producto',
+	array(
+		array('value' => 'algodon', 'label' => __('Algodón', 'kulimbos')),
+		array('value' => 'felpa', 'label' => __('Felpa suave', 'kulimbos')),
+		array('value' => 'hipoalergenico', 'label' => __('Hipoalergénico', 'kulimbos')),
+	)
+);
+$color_swatch_map = array(
+	'amarillo' => '#f5c84b',
+	'cafe'   => '#e6c59b',
+	'rosado' => '#ffb7c7',
+	'gris'   => '#bfc1c6',
+	'azul'   => '#8dc6f6',
+	'verde'  => '#50c983',
+);
 ?>
 
 <section
@@ -442,36 +524,36 @@ if ($is_all_products_view) {
 
 				<div class="plushies-filter-group">
 					<h2><?php esc_html_e('Edad recomendada', 'kulimbos'); ?></h2>
-					<label><input type="checkbox" value="0-1" data-filter-checkbox="age"> <?php esc_html_e('0 a 1 años', 'kulimbos'); ?></label>
-					<label><input type="checkbox" value="1-3" data-filter-checkbox="age"> <?php esc_html_e('1 a 3 años', 'kulimbos'); ?></label>
-					<label><input type="checkbox" value="3-6" data-filter-checkbox="age"> <?php esc_html_e('3 a 6 años', 'kulimbos'); ?></label>
-					<label><input type="checkbox" value="6-mas" data-filter-checkbox="age"> <?php esc_html_e('6+ años', 'kulimbos'); ?></label>
+					<?php foreach ($age_filters as $filter) : ?>
+						<label><input type="checkbox" value="<?php echo esc_attr($filter['value']); ?>" data-filter-checkbox="age"> <?php echo esc_html($filter['label']); ?></label>
+					<?php endforeach; ?>
 				</div>
 
 				<div class="plushies-filter-group">
 					<h2><?php esc_html_e('Tamaño', 'kulimbos'); ?></h2>
-					<label><input type="checkbox" value="pequeno" data-filter-checkbox="size"> <?php esc_html_e('Pequeño (hasta 20 cm)', 'kulimbos'); ?></label>
-					<label><input type="checkbox" value="mediano" data-filter-checkbox="size"> <?php esc_html_e('Mediano (20 a 35 cm)', 'kulimbos'); ?></label>
-					<label><input type="checkbox" value="grande" data-filter-checkbox="size"> <?php esc_html_e('Grande (35 a 50 cm)', 'kulimbos'); ?></label>
-					<label><input type="checkbox" value="extra" data-filter-checkbox="size"> <?php esc_html_e('Extra grande (50+ cm)', 'kulimbos'); ?></label>
+					<?php foreach ($size_filters as $filter) : ?>
+						<label><input type="checkbox" value="<?php echo esc_attr($filter['value']); ?>" data-filter-checkbox="size"> <?php echo esc_html($filter['label']); ?></label>
+					<?php endforeach; ?>
 				</div>
 
 				<div class="plushies-filter-group">
 					<h2><?php esc_html_e('Color', 'kulimbos'); ?></h2>
 					<div class="plushies-color-filter" aria-label="<?php esc_attr_e('Filtrar por color', 'kulimbos'); ?>">
-						<button type="button" data-filter-color="cafe" style="--swatch:#e6c59b;" aria-label="<?php esc_attr_e('Color café', 'kulimbos'); ?>"></button>
-						<button type="button" data-filter-color="rosado" style="--swatch:#ffb7c7;" aria-label="<?php esc_attr_e('Color rosado', 'kulimbos'); ?>"></button>
-						<button type="button" data-filter-color="gris" style="--swatch:#bfc1c6;" aria-label="<?php esc_attr_e('Color gris', 'kulimbos'); ?>"></button>
-						<button type="button" data-filter-color="azul" style="--swatch:#8dc6f6;" aria-label="<?php esc_attr_e('Color azul', 'kulimbos'); ?>"></button>
-						<button type="button" data-filter-color="verde" style="--swatch:#50c983;" aria-label="<?php esc_attr_e('Color verde', 'kulimbos'); ?>"></button>
+						<?php foreach ($color_filters as $filter) : ?>
+							<?php
+							$term_swatch = ! empty($filter['term_id']) ? get_term_meta((int) $filter['term_id'], 'kulimbos_color_hex', true) : '';
+							$swatch = sanitize_hex_color($term_swatch) ?: ($color_swatch_map[$filter['value']] ?? '#d9dce3');
+							?>
+							<button type="button" data-filter-color="<?php echo esc_attr($filter['value']); ?>" style="--swatch:<?php echo esc_attr($swatch); ?>;" aria-label="<?php echo esc_attr(sprintf(__('Color %s', 'kulimbos'), $filter['label'])); ?>"></button>
+						<?php endforeach; ?>
 					</div>
 				</div>
 
 				<div class="plushies-filter-group">
 					<h2><?php esc_html_e('Material', 'kulimbos'); ?></h2>
-					<label><input type="checkbox" value="algodon" data-filter-checkbox="material"> <?php esc_html_e('Algodón', 'kulimbos'); ?></label>
-					<label><input type="checkbox" value="felpa" data-filter-checkbox="material"> <?php esc_html_e('Felpa suave', 'kulimbos'); ?></label>
-					<label><input type="checkbox" value="hipoalergenico" data-filter-checkbox="material"> <?php esc_html_e('Hipoalergénico', 'kulimbos'); ?></label>
+					<?php foreach ($material_filters as $filter) : ?>
+						<label><input type="checkbox" value="<?php echo esc_attr($filter['value']); ?>" data-filter-checkbox="material"> <?php echo esc_html($filter['label']); ?></label>
+					<?php endforeach; ?>
 				</div>
 
 				<button class="plushies-clear" type="button" data-filter-clear>
@@ -497,17 +579,23 @@ if ($is_all_products_view) {
 						$image_path = ! empty($product['image']) ? $theme_dir . '/assets/img/products/' . sanitize_file_name($product['image']) : '';
 						$image_url  = ! empty($product['image_url']) ? $product['image_url'] : (! empty($product['image']) ? $theme_uri . '/assets/img/products/' . sanitize_file_name($product['image']) : '');
 						$product_category_slugs = ! empty($product['categories']) && is_array($product['categories']) ? $product['categories'] : array($product['category']);
+						$product_age_slugs = is_array($product['age']) ? $product['age'] : array($product['age']);
+						$product_size_slugs = is_array($product['size']) ? $product['size'] : array($product['size']);
+						$product_color_slugs = is_array($product['color']) ? $product['color'] : array($product['color']);
+						$product_material_slugs = is_array($product['material']) ? $product['material'] : array($product['material']);
+						$product_has_price = array_key_exists('has_price', $product) ? (bool) $product['has_price'] : true;
 						?>
 						<li
 							class="product-card plushies-card"
 							data-filter-card
 							data-category="<?php echo esc_attr($product['category']); ?>"
 							data-categories="<?php echo esc_attr(implode(' ', array_map('sanitize_title', $product_category_slugs))); ?>"
-							data-age="<?php echo esc_attr($product['age']); ?>"
-							data-size="<?php echo esc_attr($product['size']); ?>"
-							data-color="<?php echo esc_attr($product['color']); ?>"
-							data-material="<?php echo esc_attr($product['material']); ?>"
+							data-age="<?php echo esc_attr(implode(' ', array_map('sanitize_key', $product_age_slugs))); ?>"
+							data-size="<?php echo esc_attr(implode(' ', array_map('sanitize_key', $product_size_slugs))); ?>"
+							data-color="<?php echo esc_attr(implode(' ', array_map('sanitize_key', $product_color_slugs))); ?>"
+							data-material="<?php echo esc_attr(implode(' ', array_map('sanitize_key', $product_material_slugs))); ?>"
 							data-price="<?php echo absint($product['price']); ?>"
+							data-has-price="<?php echo esc_attr($product_has_price ? 'true' : 'false'); ?>"
 							data-name="<?php echo esc_attr($product['name']); ?>"
 							data-popularity="<?php echo absint($product['reviews']); ?>">
 							<div class="product-card__image-wrap">
@@ -529,13 +617,19 @@ if ($is_all_products_view) {
 								<div class="product-card__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $product['rating'])); ?>">
 									<?php for ($i = 0; $i < 5; $i++) : ?>
 										<span class="star <?php echo esc_attr($i < floor($product['rating']) ? 'star--full' : 'star--empty'); ?>" aria-hidden="true">
-											<?php kulimbos_the_icon('star', '', 20); ?>
+											<?php kulimbos_the_icon('star', '', 25); ?>
 										</span>
 									<?php endfor; ?>
 									<span class="product-card__reviews">(<?php echo absint($product['reviews']); ?>)</span>
 								</div>
 								<div class="product-card__footer">
-									<span class="product-card__price"><?php echo esc_html('$' . number_format($product['price'], 0, ',', '.')); ?></span>
+									<span class="product-card__price">
+										<?php
+										echo $product_has_price
+											? esc_html('$' . number_format($product['price'], 0, ',', '.'))
+											: esc_html__('Consultar precio', 'kulimbos');
+										?>
+									</span>
 									<button class="product-card__add-to-cart" type="button" aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
 										<?php kulimbos_the_icon('shopping-cart', '', 25); ?>
 									</button>

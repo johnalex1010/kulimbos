@@ -378,7 +378,12 @@
           .filter( ( button ) => button.classList.contains( 'is-active' ) )
           .map( ( button ) => button.dataset.filterColor );
 
-        const matchesAny = ( value, selectedValues ) => ! selectedValues.length || selectedValues.includes( value );
+        const matchesAny = ( value, selectedValues ) => {
+          if ( ! selectedValues.length ) return true;
+
+          const values = String( value || '' ).split( ' ' ).filter( Boolean );
+          return values.some( ( item ) => selectedValues.includes( item ) );
+        };
 
         const sortCards = ( visibleCards ) => {
           const mode = sort ? sort.value : 'popular';
@@ -452,6 +457,7 @@
           const selectedSizes = getCheckedValues( 'size' );
           const selectedMaterials = getCheckedValues( 'material' );
           const maxPrice = priceMax ? Number( priceMax.value ) : Number.POSITIVE_INFINITY;
+          const isPriceFilterActive = priceMax && priceMax.value !== priceMax.max;
 
           if ( priceLabel && priceMax ) {
             priceLabel.textContent = formatCurrency( priceMax.value );
@@ -460,7 +466,7 @@
           const visibleCards = cards.filter( ( card ) => {
             const cardCategories = ( card.dataset.categories || card.dataset.category || '' ).split( ' ' );
             const categoryMatches = 'all' === activeCategory || cardCategories.includes( activeCategory );
-            const priceMatches = Number( card.dataset.price ) <= maxPrice;
+            const priceMatches = ! isPriceFilterActive || ( card.dataset.hasPrice === 'true' && Number( card.dataset.price ) <= maxPrice );
             const ageMatches = matchesAny( card.dataset.age, selectedAges );
             const sizeMatches = matchesAny( card.dataset.size, selectedSizes );
             const colorMatches = matchesAny( card.dataset.color, activeColors );

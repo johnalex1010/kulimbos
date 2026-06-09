@@ -324,7 +324,7 @@ Crear en la raíz del tema con la cabecera:
 
 ## Catálogo de productos
 
-El tema registra el CPT `producto` y la taxonomía jerárquica `categoria_producto`.
+El tema registra el CPT `producto`, la taxonomía jerárquica `categoria_producto` y taxonomías internas para filtros: `edad_producto`, `tamano_producto`, `color_producto` y `material_producto`.
 
 ### Rutas recomendadas
 
@@ -345,14 +345,22 @@ Inicio / Categorías / Juguetes / Peluches / Oso de peluche
 2. Ir a **Productos → Añadir nuevo**.
 3. Asignar una o más categorías de producto.
 4. Agregar imagen destacada.
-5. Configurar metadatos opcionales desde campos personalizados:
+5. Configurar filtros desde los paneles del producto o desde el menú **Productos**:
+   - **Edades** (`edad_producto`)
+   - **Tamaños** (`tamano_producto`)
+   - **Colores** (`color_producto`)
+   - **Materiales** (`material_producto`)
+6. Configurar **Precio** y **Stock** desde la caja **Datos del producto**.
    - `kulimbos_product_price`
-   - `kulimbos_product_rating`
-   - `kulimbos_product_reviews`
-   - `kulimbos_product_age`
-   - `kulimbos_product_size`
-   - `kulimbos_product_color`
-   - `kulimbos_product_material`
+   - `kulimbos_product_stock`
+
+La calificación no se edita manualmente en el producto. Se calcula desde comentarios aprobados que tengan `kulimbos_comment_rating` entre 1 y 5.
+
+Los metadatos heredados `kulimbos_product_age`, `kulimbos_product_size`, `kulimbos_product_color` y `kulimbos_product_material` se mantienen como fallback para no romper productos antiguos, pero la configuración recomendada es por taxonomías.
+
+Los filtros por edad, tamaño, color y material aceptan múltiples términos por producto. En el frontend el producto se muestra si coincide con cualquiera de los términos seleccionados. Si un producto no tiene configurado un filtro, no se le asigna un valor por defecto inventado y no aparece al seleccionar esa opción.
+
+En **Productos → Colores**, cada término tiene el campo **Color visual** (`kulimbos_color_hex`). Ese valor hexadecimal controla el swatch mostrado en el frontend. Si se crea un color nuevo, configurar ese campo antes de usarlo en productos.
 
 WordPress selecciona automáticamente:
 
@@ -362,7 +370,7 @@ WordPress selecciona automáticamente:
 
 El tema refresca las reglas de rewrite una sola vez mediante una versión interna. Si aun así alguna ruta antigua queda en caché, ir a **Ajustes → Enlaces permanentes** y guardar una vez.
 
-Para facilitar pruebas locales, el tema crea una vez, solo para administradores, términos base (`Juguetes`, `Peluches`, `Paseo`) y productos de ejemplo (`Oso de peluche`, `Coche de bebé`) si todavía no existen.
+Para facilitar pruebas locales, el tema crea una vez, solo para administradores, términos base (`Juguetes`, `Peluches`, `Paseo`), términos de filtros (`0 a 1 años`, `Pequeño`, `Café`, `Algodón`, etc.) y productos de ejemplo (`Oso de peluche`, `Coche de bebé`) si todavía no existen.
 
 ---
 

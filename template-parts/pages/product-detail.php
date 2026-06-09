@@ -18,12 +18,20 @@ $main_product = array(
 	'price'       => '$79.900',
 	'rating'      => 4.9,
 	'reviews'     => 128,
+	'stock'       => 10,
 	'description' => __('Suave, tierno y perfecto para abrazar. Acompaña a tu pequeño en todas sus aventuras y momentos especiales.', 'kulimbos'),
 );
 
 if (is_singular('producto')) {
 	$product_id    = get_queried_object_id();
 	$product_price = get_post_meta($product_id, 'kulimbos_product_price', true);
+	$product_stock = function_exists('kulimbos_get_product_stock') ? kulimbos_get_product_stock($product_id) : (int) get_post_meta($product_id, 'kulimbos_product_stock', true);
+	$review_summary = function_exists('kulimbos_get_product_review_summary')
+		? kulimbos_get_product_review_summary($product_id)
+		: array(
+			'rating'  => 0,
+			'reviews' => 0,
+		);
 	$product_image = get_the_post_thumbnail_url($product_id, 'kulimbos-product');
 	$product_desc  = has_excerpt($product_id)
 		? get_the_excerpt($product_id)
@@ -35,8 +43,9 @@ if (is_singular('producto')) {
 		'name'        => get_the_title($product_id),
 		'alt'         => get_the_title($product_id),
 		'price'       => $product_price ? '$' . number_format((int) preg_replace('/[^\d]/', '', $product_price), 0, ',', '.') : __('Consultar precio', 'kulimbos'),
-		'rating'      => (float) (get_post_meta($product_id, 'kulimbos_product_rating', true) ?: 5),
-		'reviews'     => (int) (get_post_meta($product_id, 'kulimbos_product_reviews', true) ?: 0),
+		'rating'      => (float) $review_summary['rating'],
+		'reviews'     => (int) $review_summary['reviews'],
+		'stock'       => $product_stock,
 		'description' => $product_desc ?: __('Producto disponible en Kulimbos.', 'kulimbos'),
 	);
 }
@@ -161,14 +170,20 @@ if (is_singular('producto') && function_exists('kulimbos_get_primary_product_cat
 				$related_query->the_post();
 				$related_id    = get_the_ID();
 				$related_price = get_post_meta($related_id, 'kulimbos_product_price', true);
+				$related_review_summary = function_exists('kulimbos_get_product_review_summary')
+					? kulimbos_get_product_review_summary($related_id)
+					: array(
+						'rating'  => 0,
+						'reviews' => 0,
+					);
 
 				$related_products[] = array(
 					'image'     => '',
 					'image_url' => get_the_post_thumbnail_url($related_id, 'kulimbos-product') ?: '',
 					'alt'       => get_the_title(),
 					'name'      => get_the_title(),
-					'rating'    => (float) (get_post_meta($related_id, 'kulimbos_product_rating', true) ?: 5),
-					'reviews'   => (int) (get_post_meta($related_id, 'kulimbos_product_reviews', true) ?: 0),
+					'rating'    => (float) $related_review_summary['rating'],
+					'reviews'   => (int) $related_review_summary['reviews'],
 					'price'     => $related_price ? '$' . number_format((int) preg_replace('/[^\d]/', '', $related_price), 0, ',', '.') : __('Consultar precio', 'kulimbos'),
 					'url'       => get_permalink(),
 				);
@@ -325,14 +340,16 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 
 				<div class="product-summary__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $main_product['rating'])); ?>">
 					<?php for ($i = 0; $i < 5; $i++) : ?>
-						<span class="star star--full" aria-hidden="true"><?php kulimbos_the_icon('star', '', 24); ?></span>
+						<span class="star <?php echo esc_attr($i < floor($main_product['rating']) ? 'star--full' : 'star--empty'); ?>" aria-hidden="true"><?php kulimbos_the_icon('star', '', 24); ?></span>
 					<?php endfor; ?>
 					<span class="product-summary__reviews">(<?php echo absint($main_product['reviews']); ?>)</span>
 				</div>
 
 				<div class="product-summary__price-row">
 					<p class="product-summary__price"><?php echo esc_html($main_product['price']); ?></p>
-					<span class="product-summary__stock"><?php esc_html_e('En stock', 'kulimbos'); ?></span>
+					<span class="product-summary__stock">
+						<?php echo (int) $main_product['stock'] > 0 ? esc_html__('En stock', 'kulimbos') : esc_html__('Agotado', 'kulimbos'); ?>
+					</span>
 				</div>
 
 				<p class="product-summary__description"><?php echo esc_html($main_product['description']); ?></p>
