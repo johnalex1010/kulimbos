@@ -3,61 +3,60 @@
 /**
  * template-parts/home/featured-products.php
  *
- * Sección "Productos destacados" — grid de 4 product cards.
- *
- * Datos: hardcoded como placeholder. Cuando WooCommerce esté activo,
- * reemplazar con WP_Query sobre 'product' post type con meta 'featured'.
- *
- * Tamaño de imagen de producto:
- *   400 × 400 px (cuadrado 1:1). Formato png + fallback JPG.
- *   Carpeta: /assets/img/products/
- *   Nombre:  product-[slug].png
+ * Sección "Productos destacados" con los últimos productos publicados.
  *
  * @package Kulimbos
  */
 
 defined('ABSPATH') || exit;
 
-$theme_uri = get_template_directory_uri();
-
-$products = array(
+$products_query = new WP_Query(
 	array(
-		'image'    => $theme_uri . '/assets/img/products/oso-peluche.png',
-		'alt'      => __('Oso de peluche suave para bebé', 'kulimbos'),
-		'name'     => __('Oso de peluche', 'kulimbos'),
-		'rating'   => 4.5,
-		'reviews'  => 128,
-		'price'    => '$79.900',
-		'url'      => home_url('/productos/oso-de-peluche/'),
-	),
-	array(
-		'image'    => $theme_uri . '/assets/img/products/torre-apilable.png',
-		'alt'      => __('Torre apilable de colores para bebé', 'kulimbos'),
-		'name'     => __('Torre apilable', 'kulimbos'),
-		'rating'   => 4.5,
-		'reviews'  => 96,
-		'price'    => '$49.900',
-		'url'      => home_url('/productos/torre-apilable/'),
-	),
-	array(
-		'image'    => $theme_uri . '/assets/img/products/body-basico.png',
-		'alt'      => __('Body básico para bebé en algodón', 'kulimbos'),
-		'name'     => __('Body básico', 'kulimbos'),
-		'rating'   => 4.5,
-		'reviews'  => 72,
-		'price'    => '$24.900',
-		'url'      => home_url('/productos/body-basico/'),
-	),
-	array(
-		'image'    => $theme_uri . '/assets/img/products/set-aseo.png',
-		'alt'      => __('Set de aseo suave para bebé', 'kulimbos'),
-		'name'     => __('Set de aseo', 'kulimbos'),
-		'rating'   => 4.5,
-		'reviews'  => 51,
-		'price'    => '$59.900',
-		'url'      => home_url('/productos/set-de-aseo/'),
-	),
+		'post_type'           => 'producto',
+		'post_status'         => 'publish',
+		'posts_per_page'      => 4,
+		'orderby'             => 'date',
+		'order'               => 'DESC',
+		'ignore_sticky_posts' => true,
+		'no_found_rows'       => true,
+	)
 );
+
+$products = array();
+
+if ($products_query->have_posts()) {
+	while ($products_query->have_posts()) {
+		$products_query->the_post();
+
+		$product_id             = get_the_ID();
+		$product_name           = get_the_title();
+		$product_price          = get_post_meta($product_id, 'kulimbos_product_price', true);
+		$product_has_price      = '' !== $product_price;
+		$product_review_summary = function_exists('kulimbos_get_product_review_summary')
+			? kulimbos_get_product_review_summary($product_id)
+			: array(
+				'rating'  => 0,
+				'reviews' => 0,
+			);
+
+		$products[] = array(
+			'image_url' => get_the_post_thumbnail_url($product_id, 'kulimbos-product') ?: '',
+			'alt'       => $product_name,
+			'name'      => $product_name,
+			'rating'    => (float) $product_review_summary['rating'],
+			'reviews'   => (int) $product_review_summary['reviews'],
+			'price'     => $product_has_price ? (int) preg_replace('/[^\d]/', '', (string) $product_price) : 0,
+			'has_price' => $product_has_price,
+			'url'       => get_permalink(),
+		);
+	}
+
+	wp_reset_postdata();
+}
+
+if (empty($products)) {
+	return;
+}
 ?>
 
 <section class="home-section featured-products" aria-labelledby="featured-products-title">
@@ -67,7 +66,7 @@ $products = array(
 			<h2 class="home-section__title" id="featured-products-title">
 				<?php esc_html_e('Productos destacados', 'kulimbos'); ?>
 			</h2>
-			<a class="home-section__link" href="<?php echo esc_url(home_url('/categorias/')); ?>">
+			<a class="home-section__link" href="<?php echo esc_url(get_post_type_archive_link('producto') ?: home_url('/productos/')); ?>">
 				<?php esc_html_e('Ver todos', 'kulimbos'); ?>
 				<?php kulimbos_the_icon('chevron-right', '', 16); ?>
 			</a>
@@ -78,16 +77,23 @@ $products = array(
 				<li class="product-card">
 
 					<div class="product-card__image-wrap">
-						<!-- Reemplazar src con el asset real -->
-						<img
-							class="product-card__image"
-							src="<?php echo esc_url($product['image']); ?>"
-							alt="<?php echo esc_attr($product['alt']); ?>"
-							width="400"
-							height="400"
-							loading="lazy">
+						<?php if (! empty($product['image_url'])) : ?>
+							<img
+								class="product-card__image"
+								src="<?php echo esc_url($product['image_url']); ?>"
+								alt="<?php echo esc_attr($product['alt']); ?>"
+								width="400"
+								height="400"
+								loading="lazy"
+								decoding="async">
+						<?php else : ?>
+							<div class="product-card__image plushies-card__placeholder" role="img" aria-label="<?php echo esc_attr($product['alt']); ?>">
+								<span><?php echo esc_html($product['name']); ?></span>
+							</div>
+						<?php endif; ?>
 						<button
 							class="product-card__wishlist"
+							type="button"
 							aria-label="<?php echo esc_attr(sprintf(__('Agregar %s a favoritos', 'kulimbos'), $product['name'])); ?>">
 							<?php kulimbos_the_icon('heart', '', 25); ?>
 						</button>
@@ -102,8 +108,8 @@ $products = array(
 
 						<div class="product-card__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $product['rating'])); ?>">
 							<?php
-							$full_stars  = (int) floor($product['rating']);
-							$half_star   = ($product['rating'] - $full_stars) >= 0.5;
+							$full_stars = (int) floor($product['rating']);
+							$half_star  = ($product['rating'] - $full_stars) >= 0.5;
 							for ($i = 0; $i < 5; $i++) :
 								$cls = $i < $full_stars ? 'star--full' : ($i === $full_stars && $half_star ? 'star--half' : 'star--empty');
 							?>
@@ -115,9 +121,16 @@ $products = array(
 						</div>
 
 						<div class="product-card__footer">
-							<span class="product-card__price"><?php echo esc_html($product['price']); ?></span>
+							<span class="product-card__price">
+								<?php
+								echo $product['has_price']
+									? esc_html('$' . number_format($product['price'], 0, ',', '.'))
+									: esc_html__('Consultar precio', 'kulimbos');
+								?>
+							</span>
 							<button
 								class="product-card__add-to-cart"
+								type="button"
 								aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
 								<?php kulimbos_the_icon('shopping-cart', '', 25); ?>
 							</button>
