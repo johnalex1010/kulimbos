@@ -368,6 +368,17 @@ WordPress selecciona automáticamente:
 - `single-producto.php` para el detalle del producto.
 - `taxonomy-categoria_producto.php` para categorías como `/categoria/juguetes/peluches/`.
 - `archive-producto.php` para `/productos/`.
+- `page-carrito.php` para `/carrito/`. Si no existe una página creada en WordPress, el tema carga este template mediante `inc/cart.php`.
+
+### Carrito local
+
+El carrito del tema funciona sin WooCommerce y guarda productos anónimos en `localStorage` con la llave `kulimbos_cart_v1`.
+
+- El botón **Agregar al carrito** del detalle respeta la cantidad seleccionada.
+- Los botones de cards agregan 1 unidad.
+- El contador del header muestra la suma total de unidades.
+- La página `/carrito/` muestra los productos agregados, permite ajustar cantidades y elimina productos del almacenamiento local.
+- El resumen usa subtotal de productos + envío fijo de `12800` COP. No hay regla de envío gratis.
 
 El tema refresca las reglas de rewrite una sola vez mediante una versión interna. Si aun así alguna ruta antigua queda en caché, ir a **Ajustes → Enlaces permanentes** y guardar una vez.
 

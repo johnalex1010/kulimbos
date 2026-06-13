@@ -32,6 +32,7 @@ if ($products_query->have_posts()) {
 		$product_name           = get_the_title();
 		$product_price          = get_post_meta($product_id, 'kulimbos_product_price', true);
 		$product_has_price      = '' !== $product_price;
+		$product_stock          = function_exists('kulimbos_get_product_stock') ? kulimbos_get_product_stock($product_id) : (int) get_post_meta($product_id, 'kulimbos_product_stock', true);
 		$product_review_summary = function_exists('kulimbos_get_product_review_summary')
 			? kulimbos_get_product_review_summary($product_id)
 			: array(
@@ -40,6 +41,7 @@ if ($products_query->have_posts()) {
 			);
 
 		$products[] = array(
+			'id'        => $product_id,
 			'image_url' => get_the_post_thumbnail_url($product_id, 'kulimbos-product') ?: '',
 			'alt'       => $product_name,
 			'name'      => $product_name,
@@ -47,6 +49,7 @@ if ($products_query->have_posts()) {
 			'reviews'   => (int) $product_review_summary['reviews'],
 			'price'     => $product_has_price ? (int) preg_replace('/[^\d]/', '', (string) $product_price) : 0,
 			'has_price' => $product_has_price,
+			'stock'     => $product_stock,
 			'url'       => get_permalink(),
 		);
 	}
@@ -131,6 +134,13 @@ if (empty($products)) {
 							<button
 								class="product-card__add-to-cart"
 								type="button"
+								data-cart-add
+								data-cart-product-id="<?php echo esc_attr((string) $product['id']); ?>"
+								data-cart-product-name="<?php echo esc_attr($product['name']); ?>"
+								data-cart-product-price="<?php echo esc_attr((string) absint($product['price'])); ?>"
+								data-cart-product-url="<?php echo esc_url($product['url']); ?>"
+								data-cart-product-image="<?php echo esc_url($product['image_url']); ?>"
+								data-cart-product-stock="<?php echo esc_attr((string) absint($product['stock'])); ?>"
 								aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
 								<?php kulimbos_the_icon('shopping-cart', '', 25); ?>
 							</button>

@@ -12,10 +12,12 @@ $theme_uri = get_template_directory_uri();
 $theme_dir = get_template_directory();
 
 $main_product = array(
+	'id'          => 'demo-oso-de-peluche',
 	'image'       => 'oso-peluche.png',
 	'name'        => __('Oso de peluche', 'kulimbos'),
 	'alt'         => __('Oso de peluche cafe para bebé', 'kulimbos'),
 	'price'       => '$79.900',
+	'price_value' => 79900,
 	'rating'      => 4.9,
 	'reviews'     => 128,
 	'stock'       => 10,
@@ -51,9 +53,11 @@ if (is_singular('producto')) {
 	$main_product = array(
 		'image'       => '',
 		'image_url'   => $product_image ?: '',
+		'id'          => $product_id,
 		'name'        => get_the_title($product_id),
 		'alt'         => get_the_title($product_id),
 		'price'       => $product_price ? '$' . number_format((int) preg_replace('/[^\d]/', '', $product_price), 0, ',', '.') : __('Consultar precio', 'kulimbos'),
+		'price_value' => $product_price ? (int) preg_replace('/[^\d]/', '', $product_price) : 0,
 		'rating'      => (float) $review_summary['rating'],
 		'reviews'     => (int) $review_summary['reviews'],
 		'stock'       => $product_stock,
@@ -301,6 +305,7 @@ if (is_singular('producto') && function_exists('kulimbos_get_primary_product_cat
 				$related_query->the_post();
 				$related_id    = get_the_ID();
 				$related_price = get_post_meta($related_id, 'kulimbos_product_price', true);
+				$related_stock = function_exists('kulimbos_get_product_stock') ? kulimbos_get_product_stock($related_id) : (int) get_post_meta($related_id, 'kulimbos_product_stock', true);
 				$related_review_summary = function_exists('kulimbos_get_product_review_summary')
 					? kulimbos_get_product_review_summary($related_id)
 					: array(
@@ -309,6 +314,7 @@ if (is_singular('producto') && function_exists('kulimbos_get_primary_product_cat
 					);
 
 				$related_products[] = array(
+					'id'        => $related_id,
 					'image'     => '',
 					'image_url' => get_the_post_thumbnail_url($related_id, 'kulimbos-product') ?: '',
 					'alt'       => get_the_title(),
@@ -316,6 +322,8 @@ if (is_singular('producto') && function_exists('kulimbos_get_primary_product_cat
 					'rating'    => (float) $related_review_summary['rating'],
 					'reviews'   => (int) $related_review_summary['reviews'],
 					'price'     => $related_price ? '$' . number_format((int) preg_replace('/[^\d]/', '', $related_price), 0, ',', '.') : __('Consultar precio', 'kulimbos'),
+					'price_value' => $related_price ? (int) preg_replace('/[^\d]/', '', $related_price) : 0,
+					'stock'     => $related_stock,
 					'url'       => get_permalink(),
 				);
 			}
@@ -536,7 +544,18 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 							<button type="button" data-product-quantity-increase aria-label="<?php esc_attr_e('Aumentar cantidad', 'kulimbos'); ?>" <?php disabled(0 === $product_stock); ?>>+</button>
 						</div>
 					</div>
-					<button class="product-actions__cart" type="button" <?php disabled(0 === $product_stock); ?>>
+					<button
+						class="product-actions__cart"
+						type="button"
+						data-cart-add
+						data-cart-product-id="<?php echo esc_attr((string) $main_product['id']); ?>"
+						data-cart-product-name="<?php echo esc_attr($main_product['name']); ?>"
+						data-cart-product-price="<?php echo esc_attr((string) absint($main_product['price_value'])); ?>"
+						data-cart-product-url="<?php echo esc_url($product_url); ?>"
+						data-cart-product-image="<?php echo esc_url($main_image_url); ?>"
+						data-cart-product-stock="<?php echo esc_attr((string) $product_stock); ?>"
+						data-cart-quantity-input="[data-product-quantity-input]"
+						<?php disabled(0 === $product_stock); ?>>
 						<?php kulimbos_the_icon('shopping-cart', '', 24); ?>
 						<span><?php esc_html_e('Agregar al carrito', 'kulimbos'); ?></span>
 					</button>
@@ -597,6 +616,9 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 				<?php
 				$product_image_path = ! empty($product['image']) ? $theme_dir . '/assets/img/products/' . sanitize_file_name($product['image']) : '';
 				$product_image_url  = ! empty($product['image_url']) ? $product['image_url'] : (! empty($product['image']) ? $theme_uri . '/assets/img/products/' . sanitize_file_name($product['image']) : '');
+				$product_cart_id    = isset($product['id']) ? (string) $product['id'] : sanitize_title($product['name']);
+				$product_price_value = isset($product['price_value']) ? absint($product['price_value']) : (int) preg_replace('/[^\d]/', '', (string) $product['price']);
+				$product_stock      = isset($product['stock']) ? absint($product['stock']) : 99;
 				?>
 				<li class="product-card">
 					<div class="product-card__image-wrap">
@@ -625,7 +647,17 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 						</div>
 						<div class="product-card__footer">
 							<span class="product-card__price"><?php echo esc_html($product['price']); ?></span>
-							<button class="product-card__add-to-cart" type="button" aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
+							<button
+								class="product-card__add-to-cart"
+								type="button"
+								data-cart-add
+								data-cart-product-id="<?php echo esc_attr($product_cart_id); ?>"
+								data-cart-product-name="<?php echo esc_attr($product['name']); ?>"
+								data-cart-product-price="<?php echo esc_attr((string) $product_price_value); ?>"
+								data-cart-product-url="<?php echo esc_url($product['url']); ?>"
+								data-cart-product-image="<?php echo esc_url($product_image_url); ?>"
+								data-cart-product-stock="<?php echo esc_attr((string) $product_stock); ?>"
+								aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
 								<?php kulimbos_the_icon('shopping-cart', '', 25); ?>
 							</button>
 						</div>

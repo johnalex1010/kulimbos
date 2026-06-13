@@ -260,6 +260,7 @@ if ($is_all_products_view || is_post_type_archive('producto') || is_tax('categor
 			$product_id    = get_the_ID();
 			$product_term  = function_exists('kulimbos_get_primary_product_category') ? kulimbos_get_primary_product_category($product_id) : null;
 			$product_price = get_post_meta($product_id, 'kulimbos_product_price', true);
+			$product_stock = function_exists('kulimbos_get_product_stock') ? kulimbos_get_product_stock($product_id) : (int) get_post_meta($product_id, 'kulimbos_product_stock', true);
 			$product_price_value = '' !== $product_price ? (int) preg_replace('/[^\d]/', '', $product_price) : 0;
 			$product_terms = get_the_terms($product_id, 'categoria_producto');
 			$product_categories = array();
@@ -294,6 +295,7 @@ if ($is_all_products_view || is_post_type_archive('producto') || is_tax('categor
 			$product_categories = array_values(array_unique(array_map('sanitize_title', $product_categories)));
 
 			$products[] = array(
+				'id'        => $product_id,
 				'image'     => '',
 				'image_url' => get_the_post_thumbnail_url($product_id, 'kulimbos-product') ?: '',
 				'alt'       => get_the_title(),
@@ -308,6 +310,7 @@ if ($is_all_products_view || is_post_type_archive('producto') || is_tax('categor
 				'reviews'   => (int) $product_review_summary['reviews'],
 				'price'     => $product_price_value,
 				'has_price' => '' !== $product_price,
+				'stock'     => $product_stock,
 				'url'       => get_permalink(),
 			);
 		}
@@ -584,6 +587,8 @@ $color_swatch_map = array(
 						$product_color_slugs = is_array($product['color']) ? $product['color'] : array($product['color']);
 						$product_material_slugs = is_array($product['material']) ? $product['material'] : array($product['material']);
 						$product_has_price = array_key_exists('has_price', $product) ? (bool) $product['has_price'] : true;
+						$product_cart_id = isset($product['id']) ? (string) $product['id'] : sanitize_title($product['name']);
+						$product_stock = isset($product['stock']) ? absint($product['stock']) : 99;
 						?>
 						<li
 							class="product-card plushies-card"
@@ -630,7 +635,17 @@ $color_swatch_map = array(
 											: esc_html__('Consultar precio', 'kulimbos');
 										?>
 									</span>
-									<button class="product-card__add-to-cart" type="button" aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
+									<button
+										class="product-card__add-to-cart"
+										type="button"
+										data-cart-add
+										data-cart-product-id="<?php echo esc_attr($product_cart_id); ?>"
+										data-cart-product-name="<?php echo esc_attr($product['name']); ?>"
+										data-cart-product-price="<?php echo esc_attr((string) absint($product['price'])); ?>"
+										data-cart-product-url="<?php echo esc_url($product['url']); ?>"
+										data-cart-product-image="<?php echo esc_url($image_url); ?>"
+										data-cart-product-stock="<?php echo esc_attr((string) $product_stock); ?>"
+										aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
 										<?php kulimbos_the_icon('shopping-cart', '', 25); ?>
 									</button>
 								</div>

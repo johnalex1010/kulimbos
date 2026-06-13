@@ -20,3 +20,4 @@ require_once get_template_directory() . '/inc/widgets.php';
 require_once get_template_directory() . '/inc/assets.php';
 require_once get_template_directory() . '/inc/helpers.php';
 require_once get_template_directory() . '/inc/custom-post-types.php';
+require_once get_template_directory() . '/inc/cart.php';

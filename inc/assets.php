@@ -70,6 +70,11 @@ function kulimbos_enqueue_assets(): void {
 			'themeUrl'  => esc_url( get_template_directory_uri() ),
 			'nonce'     => wp_create_nonce( 'kulimbos_nonce' ),
 			'isLoggedIn' => is_user_logged_in(),
+			'cart'      => array(
+				'storageKey'  => 'kulimbos_cart_v1',
+				'shippingFee' => 12800,
+				'cartUrl'     => esc_url( home_url( '/carrito/' ) ),
+			),
 		)
 	);
 
