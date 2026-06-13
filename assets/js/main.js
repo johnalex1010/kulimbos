@@ -24,6 +24,7 @@
       this.productGallery.init();
       this.productQuantity.init();
       this.cart.init();
+      this.favorites.init();
       this.plushiesFilters.init();
       this.testimonialsSlider.init();
     },
@@ -674,6 +675,261 @@
         this.cartPage.querySelectorAll( '[data-cart-summary-total]' ).forEach( ( node ) => {
           node.textContent = this.formatCurrency( subtotal + shipping );
         } );
+      },
+    },
+
+    // --- Modulo: favoritos locales ------------------------------------------
+
+    favorites: {
+      storageKey: 'kulimbos_favorites_v1',
+      items: [],
+      searchTerm: '',
+      sortMode: 'recent',
+
+      init() {
+        const favoriteConfig = window.kulimbosData && window.kulimbosData.favorites ? window.kulimbosData.favorites : {};
+        this.storageKey = favoriteConfig.storageKey || this.storageKey;
+        this.items = this.read();
+
+        this.bindToggleButtons();
+        this.bindFavoritesPage();
+        this.updateHeaderCount();
+        this.updateToggleStates();
+
+        window.addEventListener( 'storage', ( event ) => {
+          if ( event.key !== this.storageKey ) return;
+          this.items = this.read();
+          this.updateHeaderCount();
+          this.updateToggleStates();
+          this.renderFavoritesPage();
+        } );
+      },
+
+      formatCurrency( value ) {
+        return `$${ Number( value || 0 ).toLocaleString( 'es-CO' ) }`;
+      },
+
+      read() {
+        try {
+          const parsed = JSON.parse( window.localStorage.getItem( this.storageKey ) || '[]' );
+          return Array.isArray( parsed ) ? parsed.map( ( item ) => this.normalizeItem( item ) ).filter( Boolean ) : [];
+        } catch ( error ) {
+          return [];
+        }
+      },
+
+      write() {
+        window.localStorage.setItem( this.storageKey, JSON.stringify( this.items ) );
+        this.updateHeaderCount();
+        this.updateToggleStates();
+        this.renderFavoritesPage();
+      },
+
+      normalizeItem( item ) {
+        if ( ! item || ! item.id || ! item.name ) return null;
+
+        return {
+          id: String( item.id ),
+          name: String( item.name ),
+          price: Math.max( 0, Number.parseInt( item.price, 10 ) || 0 ),
+          stock: Math.max( 1, Number.parseInt( item.stock, 10 ) || 99 ),
+          url: item.url ? String( item.url ) : '#',
+          image: item.image ? String( item.image ) : '',
+          addedAt: Number.parseInt( item.addedAt, 10 ) || Date.now(),
+        };
+      },
+
+      getProductFromButton( button ) {
+        return this.normalizeItem( {
+          id: button.dataset.favoriteProductId,
+          name: button.dataset.favoriteProductName,
+          price: button.dataset.favoriteProductPrice,
+          url: button.dataset.favoriteProductUrl,
+          image: button.dataset.favoriteProductImage,
+          stock: button.dataset.favoriteProductStock,
+          addedAt: Date.now(),
+        } );
+      },
+
+      hasItem( id ) {
+        return this.items.some( ( item ) => item.id === String( id ) );
+      },
+
+      toggleItem( item ) {
+        if ( ! item ) return;
+
+        if ( this.hasItem( item.id ) ) {
+          this.items = this.items.filter( ( favorite ) => favorite.id !== item.id );
+        } else {
+          this.items.unshift( item );
+        }
+
+        this.write();
+      },
+
+      removeItem( id ) {
+        this.items = this.items.filter( ( item ) => item.id !== id );
+        this.write();
+      },
+
+      updateHeaderCount() {
+        document.querySelectorAll( '#favorites-count, [data-favorites-count]' ).forEach( ( badge ) => {
+          badge.textContent = String( this.items.length );
+          badge.dataset.count = String( this.items.length );
+        } );
+      },
+
+      updateToggleStates() {
+        document.querySelectorAll( '[data-favorite-toggle]' ).forEach( ( button ) => {
+          const isFavorite = this.hasItem( button.dataset.favoriteProductId );
+          button.classList.toggle( 'is-active', isFavorite );
+          button.setAttribute( 'aria-pressed', String( isFavorite ) );
+        } );
+      },
+
+      bindToggleButtons() {
+        document.querySelectorAll( '[data-favorite-toggle]' ).forEach( ( button ) => {
+          button.addEventListener( 'click', () => {
+            this.toggleItem( this.getProductFromButton( button ) );
+          } );
+        } );
+      },
+
+      bindFavoritesPage() {
+        this.favoritesPage = document.querySelector( '[data-favorites-page]' );
+        if ( ! this.favoritesPage ) return;
+
+        const search = this.favoritesPage.querySelector( '[data-favorites-search]' );
+        const sort = this.favoritesPage.querySelector( '[data-favorites-sort]' );
+        const clear = this.favoritesPage.querySelector( '[data-favorites-clear]' );
+
+        if ( search ) {
+          search.addEventListener( 'input', () => {
+            this.searchTerm = search.value.trim().toLowerCase();
+            this.renderFavoritesPage();
+          } );
+        }
+
+        if ( sort ) {
+          sort.addEventListener( 'change', () => {
+            this.sortMode = sort.value;
+            this.renderFavoritesPage();
+          } );
+        }
+
+        if ( clear ) {
+          clear.addEventListener( 'click', () => {
+            this.items = [];
+            this.write();
+          } );
+        }
+
+        this.renderFavoritesPage();
+      },
+
+      getVisibleItems() {
+        const filtered = this.searchTerm
+          ? this.items.filter( ( item ) => item.name.toLowerCase().includes( this.searchTerm ) )
+          : [ ...this.items ];
+
+        filtered.sort( ( itemA, itemB ) => {
+          if ( this.sortMode === 'name' ) return itemA.name.localeCompare( itemB.name, 'es' );
+          if ( this.sortMode === 'price-desc' ) return itemB.price - itemA.price;
+          if ( this.sortMode === 'price-asc' ) return itemA.price - itemB.price;
+          return itemB.addedAt - itemA.addedAt;
+        } );
+
+        return filtered;
+      },
+
+      createFavoriteElement( item ) {
+        const itemElement = document.createElement( 'li' );
+        itemElement.className = 'favorite-product';
+        itemElement.dataset.favoriteItem = item.id;
+
+        const imageLink = document.createElement( 'a' );
+        imageLink.className = 'favorite-product__image';
+        imageLink.href = item.url;
+        imageLink.tabIndex = -1;
+        imageLink.setAttribute( 'aria-hidden', 'true' );
+
+        if ( item.image ) {
+          const image = document.createElement( 'img' );
+          image.src = item.image;
+          image.alt = '';
+          image.width = 140;
+          image.height = 140;
+          image.loading = 'lazy';
+          image.decoding = 'async';
+          imageLink.appendChild( image );
+        }
+
+        const body = document.createElement( 'div' );
+        body.className = 'favorite-product__body';
+
+        const name = document.createElement( 'a' );
+        name.className = 'favorite-product__name';
+        name.href = item.url;
+        name.textContent = item.name;
+
+        const price = document.createElement( 'strong' );
+        price.className = 'favorite-product__price';
+        price.textContent = this.formatCurrency( item.price );
+
+        const date = document.createElement( 'p' );
+        date.className = 'favorite-product__date';
+        date.textContent = 'Artículo guardado en tu lista';
+
+        const actions = document.createElement( 'div' );
+        actions.className = 'favorite-product__actions';
+
+        const addToCart = document.createElement( 'button' );
+        addToCart.type = 'button';
+        addToCart.textContent = 'Agregar al carrito';
+
+        const remove = document.createElement( 'button' );
+        remove.type = 'button';
+        remove.textContent = 'Eliminar';
+
+        addToCart.addEventListener( 'click', () => {
+          Kulimbos.cart.addItem( {
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: 1,
+            stock: item.stock,
+            url: item.url,
+            image: item.image,
+          } );
+        } );
+
+        remove.addEventListener( 'click', () => this.removeItem( item.id ) );
+
+        actions.append( addToCart, remove );
+        body.append( name, price, date, actions );
+        itemElement.append( imageLink, body );
+
+        return itemElement;
+      },
+
+      renderFavoritesPage() {
+        if ( ! this.favoritesPage ) return;
+
+        const list = this.favoritesPage.querySelector( '[data-favorites-items]' );
+        const empty = this.favoritesPage.querySelector( '[data-favorites-empty]' );
+        const clear = this.favoritesPage.querySelector( '[data-favorites-clear]' );
+        const count = this.favoritesPage.querySelector( '[data-favorites-summary-count]' );
+        const visibleItems = this.getVisibleItems();
+
+        if ( list ) {
+          list.innerHTML = '';
+          visibleItems.forEach( ( item ) => list.appendChild( this.createFavoriteElement( item ) ) );
+          list.hidden = visibleItems.length === 0;
+        }
+
+        if ( empty ) empty.hidden = this.items.length > 0;
+        if ( clear ) clear.hidden = this.items.length === 0;
+        if ( count ) count.textContent = String( this.items.length );
       },
     },
 

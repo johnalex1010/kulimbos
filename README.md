@@ -369,6 +369,7 @@ WordPress selecciona automáticamente:
 - `taxonomy-categoria_producto.php` para categorías como `/categoria/juguetes/peluches/`.
 - `archive-producto.php` para `/productos/`.
 - `page-carrito.php` para `/carrito/`. Si no existe una página creada en WordPress, el tema carga este template mediante `inc/cart.php`.
+- `page-favoritos.php` para `/favoritos/`. Si no existe una página creada en WordPress, el tema carga este template mediante `inc/favorites.php`.
 
 ### Carrito local
 
@@ -379,6 +380,15 @@ El carrito del tema funciona sin WooCommerce y guarda productos anónimos en `lo
 - El contador del header muestra la suma total de unidades.
 - La página `/carrito/` muestra los productos agregados, permite ajustar cantidades y elimina productos del almacenamiento local.
 - El resumen usa subtotal de productos + envío fijo de `12800` COP. No hay regla de envío gratis.
+
+### Favoritos locales
+
+Favoritos funciona sin login y guarda productos anónimos en `localStorage` con la llave `kulimbos_favorites_v1`.
+
+- El header muestra el total de productos favoritos.
+- Los botones de corazón agregan o quitan productos de favoritos.
+- La página `/favoritos/` muestra una lista de compras privada, permite buscar, ordenar, eliminar productos y agregarlos al carrito.
+- No hay listas múltiples reales ni sincronización con usuarios.
 
 El tema refresca las reglas de rewrite una sola vez mediante una versión interna. Si aun así alguna ruta antigua queda en caché, ir a **Ajustes → Enlaces permanentes** y guardar una vez.
 

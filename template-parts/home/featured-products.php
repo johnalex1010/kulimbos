@@ -97,6 +97,13 @@ if (empty($products)) {
 						<button
 							class="product-card__wishlist"
 							type="button"
+							data-favorite-toggle
+							data-favorite-product-id="<?php echo esc_attr((string) $product['id']); ?>"
+							data-favorite-product-name="<?php echo esc_attr($product['name']); ?>"
+							data-favorite-product-price="<?php echo esc_attr((string) absint($product['price'])); ?>"
+							data-favorite-product-url="<?php echo esc_url($product['url']); ?>"
+							data-favorite-product-image="<?php echo esc_url($product['image_url']); ?>"
+							data-favorite-product-stock="<?php echo esc_attr((string) absint($product['stock'])); ?>"
 							aria-label="<?php echo esc_attr(sprintf(__('Agregar %s a favoritos', 'kulimbos'), $product['name'])); ?>">
 							<?php kulimbos_the_icon('heart', '', 25); ?>
 						</button>

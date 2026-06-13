@@ -75,6 +75,10 @@ function kulimbos_enqueue_assets(): void {
 				'shippingFee' => 12800,
 				'cartUrl'     => esc_url( home_url( '/carrito/' ) ),
 			),
+			'favorites' => array(
+				'storageKey'   => 'kulimbos_favorites_v1',
+				'favoritesUrl' => esc_url( home_url( '/favoritos/' ) ),
+			),
 		)
 	);
 

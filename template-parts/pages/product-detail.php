@@ -629,7 +629,17 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 								<span><?php esc_html_e('Imagen del producto', 'kulimbos'); ?></span>
 							</div>
 						<?php endif; ?>
-						<button class="product-card__wishlist" type="button" aria-label="<?php echo esc_attr(sprintf(__('Agregar %s a favoritos', 'kulimbos'), $product['name'])); ?>">
+						<button
+							class="product-card__wishlist"
+							type="button"
+							data-favorite-toggle
+							data-favorite-product-id="<?php echo esc_attr($product_cart_id); ?>"
+							data-favorite-product-name="<?php echo esc_attr($product['name']); ?>"
+							data-favorite-product-price="<?php echo esc_attr((string) $product_price_value); ?>"
+							data-favorite-product-url="<?php echo esc_url($product['url']); ?>"
+							data-favorite-product-image="<?php echo esc_url($product_image_url); ?>"
+							data-favorite-product-stock="<?php echo esc_attr((string) $product_stock); ?>"
+							aria-label="<?php echo esc_attr(sprintf(__('Agregar %s a favoritos', 'kulimbos'), $product['name'])); ?>">
 							<?php kulimbos_the_icon('heart', '', 25); ?>
 						</button>
 					</div>
