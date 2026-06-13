@@ -71,7 +71,8 @@
     position: relative;
     display: grid;
     place-items: center;
-    min-height: 420px;
+    aspect-ratio: 1 / 1;
+    min-height: 0;
     overflow: hidden;
     border-radius: 18px;
     background:
@@ -120,7 +121,9 @@
   &__image {
     position: relative;
     z-index: 1;
-    width: min(390px, 82%);
+    width: auto;
+    max-width: 82%;
+    max-height: 82%;
     height: auto;
     object-fit: contain;
   }
@@ -175,6 +178,10 @@
     margin: 0;
     padding: 0;
     list-style: none;
+
+    li[hidden] {
+      display: none;
+    }
   }
 
   &__thumb {
@@ -869,10 +876,6 @@
 @media (max-width: 640px) {
   .product-detail-page {
     padding-top: 24px;
-  }
-
-  .product-gallery__main {
-    min-height: 330px;
   }
 
   .product-gallery__thumb-row {

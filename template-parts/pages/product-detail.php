@@ -164,7 +164,7 @@ if (is_singular('producto')) {
 	);
 }
 
-$thumbs = array(
+$default_thumbs = array(
 	array(
 		'image' => 'oso-peluche.png',
 		'label' => __('Vista principal del oso de peluche', 'kulimbos'),
@@ -186,6 +186,44 @@ $thumbs = array(
 		'label' => __('Imagen principal de prueba del producto', 'kulimbos'),
 	),
 );
+
+$thumbs = $default_thumbs;
+
+if (is_singular('producto')) {
+	$product_id  = get_queried_object_id();
+	$gallery_ids = function_exists('kulimbos_sanitize_product_gallery_ids')
+		? kulimbos_sanitize_product_gallery_ids(get_post_meta($product_id, 'kulimbos_product_gallery_ids', true))
+		: array();
+
+	$thumbs = array();
+
+	if (! empty($main_product['image_url'])) {
+		$thumbs[] = array(
+			'image_url' => $main_product['image_url'],
+			'label'     => $main_product['alt'],
+		);
+	}
+
+	foreach ($gallery_ids as $gallery_attachment_id) {
+		$gallery_image_url = wp_get_attachment_image_url($gallery_attachment_id, 'kulimbos-product');
+
+		if (! $gallery_image_url) {
+			continue;
+		}
+
+		$gallery_image_alt = get_post_meta($gallery_attachment_id, '_wp_attachment_image_alt', true);
+
+		$thumbs[] = array(
+			'image_url' => $gallery_image_url,
+			'label'     => $gallery_image_alt ? $gallery_image_alt : $main_product['name'],
+		);
+	}
+
+	if (empty($main_product['image_url']) && ! empty($thumbs[0]['image_url'])) {
+		$main_product['image_url'] = $thumbs[0]['image_url'];
+		$main_product['alt']       = $thumbs[0]['label'];
+	}
+}
 
 $related_products = array(
 	array(
@@ -406,9 +444,14 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 					<ul class="product-gallery__thumbs" role="list">
 						<?php foreach ($thumbs as $index => $thumb) : ?>
 							<?php
-							$thumb_path = $theme_dir . '/assets/img/products/' . sanitize_file_name($thumb['image']);
-							$thumb_url  = $theme_uri . '/assets/img/products/' . sanitize_file_name($thumb['image']);
+							$thumb_path = ! empty($thumb['image']) ? $theme_dir . '/assets/img/products/' . sanitize_file_name($thumb['image']) : '';
+							$thumb_url  = ! empty($thumb['image_url'])
+								? $thumb['image_url']
+								: (! empty($thumb['image']) ? $theme_uri . '/assets/img/products/' . sanitize_file_name($thumb['image']) : '');
 							?>
+							<?php if (empty($thumb_url)) : ?>
+								<?php continue; ?>
+							<?php endif; ?>
 							<li>
 								<button
 									class="product-gallery__thumb <?php echo 0 === $index ? 'is-active' : ''; ?>"
@@ -419,7 +462,7 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 									data-gallery-alt="<?php echo esc_attr($thumb['label']); ?>"
 									aria-label="<?php echo esc_attr($thumb['label']); ?>"
 									aria-current="<?php echo 0 === $index ? 'true' : 'false'; ?>">
-									<?php if (file_exists($thumb_path)) : ?>
+									<?php if (! empty($thumb['image_url']) || ($thumb_path && file_exists($thumb_path))) : ?>
 										<img src="<?php echo esc_url($thumb_url); ?>" alt="" width="72" height="72" loading="lazy" decoding="async">
 									<?php endif; ?>
 								</button>

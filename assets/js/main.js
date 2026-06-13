@@ -233,8 +233,31 @@
 
         if ( ! mainImage || ! thumbs.length ) return;
 
+        const visibleThumbs = 5;
         let current = thumbs.findIndex( ( thumb ) => thumb.classList.contains( 'is-active' ) );
         current = current >= 0 ? current : 0;
+        let visibleStart = Math.floor( current / visibleThumbs ) * visibleThumbs;
+
+        const updateVisibleThumbs = () => {
+          if ( thumbs.length <= visibleThumbs ) return;
+
+          if ( current < visibleStart ) {
+            visibleStart = current;
+          }
+
+          if ( current >= visibleStart + visibleThumbs ) {
+            visibleStart = current - visibleThumbs + 1;
+          }
+
+          visibleStart = Math.max( 0, Math.min( visibleStart, thumbs.length - visibleThumbs ) );
+
+          thumbs.forEach( ( thumb, thumbIndex ) => {
+            const thumbItem = thumb.closest( 'li' );
+            if ( thumbItem ) {
+              thumbItem.hidden = thumbIndex < visibleStart || thumbIndex >= visibleStart + visibleThumbs;
+            }
+          } );
+        };
 
         const goTo = ( index ) => {
           const total = thumbs.length;
@@ -245,6 +268,8 @@
             thumb.classList.toggle( 'is-active', isActive );
             thumb.setAttribute( 'aria-current', String( isActive ) );
           } );
+
+          updateVisibleThumbs();
 
           const activeThumb = thumbs[ current ];
           const imageUrl = activeThumb.dataset.galleryImage;

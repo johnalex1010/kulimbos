@@ -216,6 +216,27 @@ function kulimbos_register_product_meta(): void {
 			)
 		);
 	}
+
+	register_post_meta(
+		'producto',
+		'kulimbos_product_gallery_ids',
+		array(
+			'type'              => 'array',
+			'single'            => true,
+			'show_in_rest'      => array(
+				'schema' => array(
+					'type'  => 'array',
+					'items' => array(
+						'type' => 'integer',
+					),
+				),
+			),
+			'sanitize_callback' => 'kulimbos_sanitize_product_gallery_ids',
+			'auth_callback'     => static function (): bool {
+				return current_user_can( 'edit_posts' );
+			},
+		)
+	);
 }
 add_action( 'init', 'kulimbos_register_product_meta', 2 );
 
@@ -233,6 +254,34 @@ function kulimbos_sanitize_product_integer_meta( $value ): string {
 }
 
 /**
+ * Sanitiza la lista ordenada de IDs de imágenes de galería.
+ *
+ * @param mixed $value Valor recibido.
+ * @return array<int>
+ */
+function kulimbos_sanitize_product_gallery_ids( $value ): array {
+	if ( is_string( $value ) ) {
+		$value = explode( ',', $value );
+	}
+
+	if ( ! is_array( $value ) ) {
+		return array();
+	}
+
+	$attachment_ids = array();
+
+	foreach ( $value as $attachment_id ) {
+		$attachment_id = absint( $attachment_id );
+
+		if ( $attachment_id > 0 && 'attachment' === get_post_type( $attachment_id ) && wp_attachment_is_image( $attachment_id ) ) {
+			$attachment_ids[] = $attachment_id;
+		}
+	}
+
+	return array_values( array_unique( $attachment_ids ) );
+}
+
+/**
  * Agrega la caja de datos del producto.
  */
 function kulimbos_add_product_data_meta_box(): void {
@@ -243,6 +292,15 @@ function kulimbos_add_product_data_meta_box(): void {
 		'producto',
 		'side',
 		'high'
+	);
+
+	add_meta_box(
+		'kulimbos-product-gallery',
+		__( 'Galería del producto', 'kulimbos' ),
+		'kulimbos_render_product_gallery_meta_box',
+		'producto',
+		'normal',
+		'default'
 	);
 }
 add_action( 'add_meta_boxes_producto', 'kulimbos_add_product_data_meta_box' );
@@ -288,6 +346,122 @@ function kulimbos_render_product_data_meta_box( WP_Post $post ): void {
 }
 
 /**
+ * Renderiza la caja de galería del producto.
+ *
+ * @param WP_Post $post Producto actual.
+ */
+function kulimbos_render_product_gallery_meta_box( WP_Post $post ): void {
+	$gallery_ids = kulimbos_sanitize_product_gallery_ids( get_post_meta( $post->ID, 'kulimbos_product_gallery_ids', true ) );
+
+	wp_nonce_field( 'kulimbos_save_product_gallery', 'kulimbos_product_gallery_nonce' );
+	?>
+	<div class="kulimbos-product-gallery-field" data-product-gallery-field>
+		<input
+			type="hidden"
+			name="kulimbos_product_gallery_ids"
+			value="<?php echo esc_attr( implode( ',', $gallery_ids ) ); ?>"
+			data-product-gallery-input>
+
+		<div class="kulimbos-product-gallery-field__intro">
+			<div>
+				<h3><?php esc_html_e( 'Imágenes adicionales', 'kulimbos' ); ?></h3>
+				<p><?php esc_html_e( 'La imagen destacada seguirá siendo la imagen principal. Estas imágenes aparecerán como miniaturas adicionales en el detalle del producto.', 'kulimbos' ); ?></p>
+			</div>
+			<button type="button" class="button button-primary" data-product-gallery-select>
+				<span class="dashicons dashicons-format-gallery" aria-hidden="true"></span>
+				<?php esc_html_e( 'Agregar imágenes', 'kulimbos' ); ?>
+			</button>
+		</div>
+
+		<ul class="kulimbos-product-gallery-field__list" data-product-gallery-list>
+			<?php foreach ( $gallery_ids as $attachment_id ) : ?>
+				<?php
+				$image_url = wp_get_attachment_image_url( $attachment_id, 'thumbnail' );
+
+				if ( ! $image_url ) {
+					continue;
+				}
+				?>
+				<li class="kulimbos-product-gallery-field__item" data-product-gallery-item data-attachment-id="<?php echo absint( $attachment_id ); ?>">
+					<div class="kulimbos-product-gallery-field__thumb">
+						<img src="<?php echo esc_url( $image_url ); ?>" alt="" width="120" height="120">
+					</div>
+					<div class="kulimbos-product-gallery-field__actions">
+						<button type="button" class="button button-small" data-product-gallery-move-up>
+							<span class="dashicons dashicons-arrow-up-alt2" aria-hidden="true"></span>
+							<?php esc_html_e( 'Subir', 'kulimbos' ); ?>
+						</button>
+						<button type="button" class="button button-small" data-product-gallery-move-down>
+							<span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span>
+							<?php esc_html_e( 'Bajar', 'kulimbos' ); ?>
+						</button>
+						<button type="button" class="button button-small kulimbos-product-gallery-field__remove" data-product-gallery-remove>
+							<span class="dashicons dashicons-trash" aria-hidden="true"></span>
+							<?php esc_html_e( 'Quitar', 'kulimbos' ); ?>
+						</button>
+					</div>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+
+		<div class="kulimbos-product-gallery-field__empty" data-product-gallery-empty <?php echo empty( $gallery_ids ) ? '' : 'hidden'; ?>>
+			<span class="dashicons dashicons-images-alt2" aria-hidden="true"></span>
+			<p><?php esc_html_e( 'Aún no hay imágenes adicionales en la galería.', 'kulimbos' ); ?></p>
+		</div>
+	</div>
+	<?php
+}
+
+/**
+ * Encola la biblioteca de medios y el script de galería solo al editar productos.
+ *
+ * @param string $hook_suffix Pantalla actual del admin.
+ */
+function kulimbos_enqueue_product_gallery_admin_assets( string $hook_suffix ): void {
+	if ( ! in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true ) ) {
+		return;
+	}
+
+	$screen = get_current_screen();
+
+	if ( ! $screen || 'producto' !== $screen->post_type ) {
+		return;
+	}
+
+	$script_path = get_template_directory() . '/assets/admin/product-gallery.js';
+	$style_path  = get_template_directory() . '/assets/admin/product-gallery.css';
+
+	wp_enqueue_media();
+	wp_enqueue_style(
+		'kulimbos-product-gallery-admin',
+		get_template_directory_uri() . '/assets/admin/product-gallery.css',
+		array(),
+		file_exists( $style_path ) ? filemtime( $style_path ) : KULIMBOS_VERSION
+	);
+
+	wp_enqueue_script(
+		'kulimbos-product-gallery-admin',
+		get_template_directory_uri() . '/assets/admin/product-gallery.js',
+		array(),
+		file_exists( $script_path ) ? filemtime( $script_path ) : KULIMBOS_VERSION,
+		true
+	);
+
+	wp_localize_script(
+		'kulimbos-product-gallery-admin',
+		'kulimbosProductGalleryAdmin',
+		array(
+			'frameTitle'   => __( 'Seleccionar imágenes de galería', 'kulimbos' ),
+			'buttonText'   => __( 'Usar imágenes seleccionadas', 'kulimbos' ),
+			'moveUpText'   => __( 'Subir', 'kulimbos' ),
+			'moveDownText' => __( 'Bajar', 'kulimbos' ),
+			'removeText'   => __( 'Quitar', 'kulimbos' ),
+		)
+	);
+}
+add_action( 'admin_enqueue_scripts', 'kulimbos_enqueue_product_gallery_admin_assets' );
+
+/**
  * Guarda los datos administrativos del producto.
  *
  * @param int $post_id ID del producto.
@@ -325,6 +499,41 @@ function kulimbos_save_product_data_meta_box( int $post_id ): void {
 	}
 }
 add_action( 'save_post_producto', 'kulimbos_save_product_data_meta_box' );
+
+/**
+ * Guarda la galería administrativa del producto.
+ *
+ * @param int $post_id ID del producto.
+ */
+function kulimbos_save_product_gallery_meta_box( int $post_id ): void {
+	if ( ! isset( $_POST['kulimbos_product_gallery_nonce'] ) ) {
+		return;
+	}
+
+	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['kulimbos_product_gallery_nonce'] ) ), 'kulimbos_save_product_gallery' ) ) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	$gallery_ids = isset( $_POST['kulimbos_product_gallery_ids'] )
+		? kulimbos_sanitize_product_gallery_ids( wp_unslash( $_POST['kulimbos_product_gallery_ids'] ) )
+		: array();
+
+	if ( empty( $gallery_ids ) ) {
+		delete_post_meta( $post_id, 'kulimbos_product_gallery_ids' );
+		return;
+	}
+
+	update_post_meta( $post_id, 'kulimbos_product_gallery_ids', $gallery_ids );
+}
+add_action( 'save_post_producto', 'kulimbos_save_product_gallery_meta_box' );
 
 /**
  * Muestra selector de calificación en comentarios de producto.

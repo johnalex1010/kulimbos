@@ -344,13 +344,14 @@ Inicio / Categorías / Juguetes / Peluches / Oso de peluche
 1. Ir a **Productos → Categorías** y crear categorías jerárquicas, por ejemplo `Juguetes` y dentro `Peluches`.
 2. Ir a **Productos → Añadir nuevo**.
 3. Asignar una o más categorías de producto.
-4. Agregar imagen destacada.
-5. Configurar filtros desde los paneles del producto o desde el menú **Productos**:
+4. Agregar imagen destacada. Esta imagen se usa como imagen principal del detalle y como primera miniatura de la galería.
+5. Configurar imágenes adicionales desde la caja **Galería del producto**. El campo usa la biblioteca de medios nativa de WordPress y guarda los IDs ordenados en `kulimbos_product_gallery_ids`.
+6. Configurar filtros desde los paneles del producto o desde el menú **Productos**:
    - **Edades** (`edad_producto`)
    - **Tamaños** (`tamano_producto`)
    - **Colores** (`color_producto`)
    - **Materiales** (`material_producto`)
-6. Configurar **Precio** y **Stock** desde la caja **Datos del producto**.
+7. Configurar **Precio** y **Stock** desde la caja **Datos del producto**.
    - `kulimbos_product_price`
    - `kulimbos_product_stock`
 
