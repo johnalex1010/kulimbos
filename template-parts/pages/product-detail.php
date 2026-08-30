@@ -11,88 +11,139 @@ defined('ABSPATH') || exit;
 $theme_uri = get_template_directory_uri();
 $theme_dir = get_template_directory();
 
+$main_product       = array();
+$product_categories = array();
+
+if (! is_singular('producto')) {
+	?>
+	<section class="product-detail-page" aria-labelledby="product-empty-title">
+		<div class="container">
+			<div class="product-detail-empty">
+				<h1 id="product-empty-title"><?php esc_html_e('Producto no disponible', 'kulimbos'); ?></h1>
+				<p><?php esc_html_e('Aún no hay un producto publicado para mostrar. Cuando cargues productos en WordPress podrás ver su ficha completa aquí.', 'kulimbos'); ?></p>
+				<a class="btn btn--primary" href="<?php echo esc_url(get_post_type_archive_link('producto') ?: home_url('/productos/')); ?>">
+					<?php esc_html_e('Ver catálogo', 'kulimbos'); ?>
+				</a>
+			</div>
+		</div>
+	</section>
+	<?php
+	return;
+}
+
+$product_id    = get_queried_object_id();
+$product_price = function_exists('kulimbos_get_product_price_data')
+	? kulimbos_get_product_price_data($product_id)
+	: array(
+		'effective' => (int) preg_replace('/[^\d]/', '', (string) get_post_meta($product_id, 'kulimbos_product_price', true)),
+		'label'     => get_post_meta($product_id, 'kulimbos_product_price', true) ? '$' . number_format((int) preg_replace('/[^\d]/', '', (string) get_post_meta($product_id, 'kulimbos_product_price', true)), 0, ',', '.') : __('Consultar precio', 'kulimbos'),
+		'has_sale'  => false,
+		'regular'   => 0,
+		'sale'      => 0,
+	);
+$product_stock = function_exists('kulimbos_get_product_stock') ? kulimbos_get_product_stock($product_id) : (int) get_post_meta($product_id, 'kulimbos_product_stock', true);
+$review_summary = function_exists('kulimbos_get_product_review_summary')
+	? kulimbos_get_product_review_summary($product_id)
+	: array(
+		'rating'  => 0,
+		'reviews' => 0,
+	);
+$product_image = get_the_post_thumbnail_url($product_id, 'kulimbos-product');
+$product_desc  = has_excerpt($product_id)
+	? get_the_excerpt($product_id)
+	: wp_trim_words(wp_strip_all_tags(get_post_field('post_content', $product_id)), 32);
+
 $main_product = array(
-	'id'          => 'demo-oso-de-peluche',
-	'image'       => 'oso-peluche.png',
-	'name'        => __('Oso de peluche', 'kulimbos'),
-	'alt'         => __('Oso de peluche cafe para bebé', 'kulimbos'),
-	'price'       => '$79.900',
-	'price_value' => 79900,
-	'rating'      => 4.9,
-	'reviews'     => 128,
-	'stock'       => 10,
-	'description' => __('Suave, tierno y perfecto para abrazar. Acompaña a tu pequeño en todas sus aventuras y momentos especiales.', 'kulimbos'),
+	'image'       => '',
+	'image_url'   => $product_image ?: '',
+	'id'          => $product_id,
+	'name'        => get_the_title($product_id),
+	'alt'         => get_the_title($product_id),
+	'price'       => $product_price['label'],
+	'price_value' => (int) $product_price['effective'],
+	'price_data'  => $product_price,
+	'rating'      => (float) $review_summary['rating'],
+	'reviews'     => (int) $review_summary['reviews'],
+	'stock'       => $product_stock,
+	'description' => $product_desc ?: __('Producto disponible en Kulimbos.', 'kulimbos'),
 );
 
-$product_categories = array(
-	array(
-		'name' => __('Juguetes', 'kulimbos'),
-		'url'  => home_url('/categoria/juguetes/'),
-	),
-	array(
-		'name' => __('Peluches', 'kulimbos'),
-		'url'  => home_url('/categoria/peluches/'),
-	),
+$assigned_terms = get_the_terms($product_id, 'categoria_producto');
+
+if (! empty($assigned_terms) && ! is_wp_error($assigned_terms)) {
+	$category_map = array();
+
+	foreach ($assigned_terms as $assigned_term) {
+		foreach (array_reverse(get_ancestors($assigned_term->term_id, 'categoria_producto')) as $ancestor_id) {
+			$ancestor = get_term($ancestor_id, 'categoria_producto');
+
+			if ($ancestor instanceof WP_Term) {
+				$category_map[$ancestor->term_id] = $ancestor;
+			}
+		}
+
+		$category_map[$assigned_term->term_id] = $assigned_term;
+	}
+
+	foreach ($category_map as $category_term) {
+		$category_link = get_term_link($category_term);
+
+		if (! is_wp_error($category_link)) {
+			$product_categories[] = array(
+				'name' => $category_term->name,
+				'url'  => $category_link,
+			);
+		}
+	}
+}
+
+$product_sheet_data = array(
+	'technical'       => array(),
+	'features'        => array(),
+	'designs'         => array(),
+	'variants'        => array(),
+	'size_tables'     => array(),
+	'market_prices'   => array(),
+	'content_blocks'  => array(),
+	'pending_warning' => '',
+);
+$product_status_labels = array(
+	'active'      => __('Activo', 'kulimbos'),
+	'draft'       => __('Borrador', 'kulimbos'),
+	'pending'     => __('Pendiente', 'kulimbos'),
+	'unavailable' => __('No disponible', 'kulimbos'),
 );
 
 if (is_singular('producto')) {
-	$product_id    = get_queried_object_id();
-	$product_price = get_post_meta($product_id, 'kulimbos_product_price', true);
-	$product_stock = function_exists('kulimbos_get_product_stock') ? kulimbos_get_product_stock($product_id) : (int) get_post_meta($product_id, 'kulimbos_product_stock', true);
-	$review_summary = function_exists('kulimbos_get_product_review_summary')
-		? kulimbos_get_product_review_summary($product_id)
-		: array(
-			'rating'  => 0,
-			'reviews' => 0,
-		);
-	$product_image = get_the_post_thumbnail_url($product_id, 'kulimbos-product');
-	$product_desc  = has_excerpt($product_id)
-		? get_the_excerpt($product_id)
-		: wp_trim_words(wp_strip_all_tags(get_post_field('post_content', $product_id)), 32);
+	$product_id = get_queried_object_id();
+	$product_sheet_data['technical']     = function_exists('kulimbos_get_product_technical_sheet') ? kulimbos_get_product_technical_sheet($product_id) : array();
+	$product_sheet_data['features']      = function_exists('kulimbos_get_product_features') ? kulimbos_get_product_features($product_id) : array();
+	$product_sheet_data['designs']       = function_exists('kulimbos_get_product_designs') ? kulimbos_get_product_designs($product_id) : array();
+	$product_sheet_data['variants']      = function_exists('kulimbos_get_product_variants') ? kulimbos_get_product_variants($product_id) : array();
+	$product_sheet_data['size_tables']   = function_exists('kulimbos_get_product_size_tables') ? kulimbos_get_product_size_tables($product_id) : array();
+	$product_sheet_data['market_prices'] = function_exists('kulimbos_get_product_market_prices') ? kulimbos_get_product_market_prices($product_id) : array();
 
-	$main_product = array(
-		'image'       => '',
-		'image_url'   => $product_image ?: '',
-		'id'          => $product_id,
-		'name'        => get_the_title($product_id),
-		'alt'         => get_the_title($product_id),
-		'price'       => $product_price ? '$' . number_format((int) preg_replace('/[^\d]/', '', $product_price), 0, ',', '.') : __('Consultar precio', 'kulimbos'),
-		'price_value' => $product_price ? (int) preg_replace('/[^\d]/', '', $product_price) : 0,
-		'rating'      => (float) $review_summary['rating'],
-		'reviews'     => (int) $review_summary['reviews'],
-		'stock'       => $product_stock,
-		'description' => $product_desc ?: __('Producto disponible en Kulimbos.', 'kulimbos'),
+	$content_meta_map = array(
+		'kulimbos_product_personalization_instructions' => __('Cómo personalizar', 'kulimbos'),
+		'kulimbos_product_care_instructions'            => __('Cuidados recomendados', 'kulimbos'),
+		'kulimbos_product_preparation_mode'             => __('Modo de preparación', 'kulimbos'),
+		'kulimbos_product_key_ingredients'              => __('Ingredientes clave explicados', 'kulimbos'),
+		'kulimbos_product_warnings'                     => __('Información importante', 'kulimbos'),
+		'kulimbos_product_usage_occasions'              => __('Ideas de uso', 'kulimbos'),
 	);
 
-	$product_categories = array();
-	$assigned_terms = get_the_terms($product_id, 'categoria_producto');
+	foreach ($content_meta_map as $meta_key => $title) {
+		$content = function_exists('kulimbos_get_product_long_text') ? kulimbos_get_product_long_text($product_id, $meta_key) : '';
 
-	if (! empty($assigned_terms) && ! is_wp_error($assigned_terms)) {
-		$category_map = array();
-
-		foreach ($assigned_terms as $assigned_term) {
-			foreach (array_reverse(get_ancestors($assigned_term->term_id, 'categoria_producto')) as $ancestor_id) {
-				$ancestor = get_term($ancestor_id, 'categoria_producto');
-
-				if ($ancestor instanceof WP_Term) {
-					$category_map[$ancestor->term_id] = $ancestor;
-				}
-			}
-
-			$category_map[$assigned_term->term_id] = $assigned_term;
-		}
-
-		foreach ($category_map as $category_term) {
-			$category_link = get_term_link($category_term);
-
-			if (! is_wp_error($category_link)) {
-				$product_categories[] = array(
-					'name' => $category_term->name,
-					'url'  => $category_link,
-				);
-			}
+		if ('' !== $content) {
+			$product_sheet_data['content_blocks'][] = array(
+				'title'   => $title,
+				'content' => $content,
+			);
 		}
 	}
+
+	$product_sheet_data['pending_warning'] = function_exists('kulimbos_get_product_long_text') ? kulimbos_get_product_long_text($product_id, 'kulimbos_product_pending_verification') : '';
 }
 
 $feature_taxonomies = array(
@@ -120,167 +171,60 @@ $feature_taxonomies = array(
 
 $features = array();
 
-if (is_singular('producto')) {
-	$product_id = get_queried_object_id();
+foreach ($feature_taxonomies as $taxonomy => $feature_data) {
+	$terms = get_the_terms($product_id, $taxonomy);
 
-	foreach ($feature_taxonomies as $taxonomy => $feature_data) {
-		$terms = get_the_terms($product_id, $taxonomy);
-
-		if (empty($terms) || is_wp_error($terms)) {
-			continue;
-		}
-
-		$term_names = wp_list_pluck($terms, 'name');
-
-		$features[] = array(
-			'icon'  => $feature_data['icon'],
-			'title' => $feature_data['title'],
-			'text'  => implode(', ', array_map('sanitize_text_field', $term_names)),
-			'color' => $feature_data['color'],
-		);
+	if (empty($terms) || is_wp_error($terms)) {
+		continue;
 	}
-} else {
-	$features = array(
-		array(
-			'icon'  => 'smile',
-			'title' => __('Edad recomendada', 'kulimbos'),
-			'text'  => __('0 a 1 años', 'kulimbos'),
-			'color' => 'coral',
-		),
-		array(
-			'icon'  => 'tag',
-			'title' => __('Tamaño', 'kulimbos'),
-			'text'  => __('Mediano (20 a 35 cm)', 'kulimbos'),
-			'color' => 'mint',
-		),
-		array(
-			'icon'  => 'sparkles',
-			'title' => __('Color', 'kulimbos'),
-			'text'  => __('Café', 'kulimbos'),
-			'color' => 'purple',
-		),
-		array(
-			'icon'  => 'package',
-			'title' => __('Material', 'kulimbos'),
-			'text'  => __('Felpa suave', 'kulimbos'),
-			'color' => 'sage',
-		),
+
+	$term_names = wp_list_pluck($terms, 'name');
+
+	$features[] = array(
+		'icon'  => $feature_data['icon'],
+		'title' => $feature_data['title'],
+		'text'  => implode(', ', array_map('sanitize_text_field', $term_names)),
+		'color' => $feature_data['color'],
 	);
 }
 
-$default_thumbs = array(
-	array(
-		'image' => 'oso-peluche.png',
-		'label' => __('Vista principal del oso de peluche', 'kulimbos'),
-	),
-	array(
-		'image' => 'torre-apilable.png',
-		'label' => __('Imagen secundaria de prueba del producto', 'kulimbos'),
-	),
-	array(
-		'image' => 'body-basico.png',
-		'label' => __('Imagen alternativa de prueba del producto', 'kulimbos'),
-	),
-	array(
-		'image' => 'set-aseo.png',
-		'label' => __('Detalle de prueba del producto', 'kulimbos'),
-	),
-	array(
-		'image' => 'oso-peluche.png',
-		'label' => __('Imagen principal de prueba del producto', 'kulimbos'),
-	),
-);
+$gallery_ids = function_exists('kulimbos_sanitize_product_gallery_ids')
+	? kulimbos_sanitize_product_gallery_ids(get_post_meta($product_id, 'kulimbos_product_gallery_ids', true))
+	: array();
 
-$thumbs = $default_thumbs;
+$thumbs = array();
 
-if (is_singular('producto')) {
-	$product_id  = get_queried_object_id();
-	$gallery_ids = function_exists('kulimbos_sanitize_product_gallery_ids')
-		? kulimbos_sanitize_product_gallery_ids(get_post_meta($product_id, 'kulimbos_product_gallery_ids', true))
-		: array();
-
-	$thumbs = array();
-
-	if (! empty($main_product['image_url'])) {
-		$thumbs[] = array(
-			'image_url' => $main_product['image_url'],
-			'label'     => $main_product['alt'],
-		);
-	}
-
-	foreach ($gallery_ids as $gallery_attachment_id) {
-		$gallery_image_url = wp_get_attachment_image_url($gallery_attachment_id, 'kulimbos-product');
-
-		if (! $gallery_image_url) {
-			continue;
-		}
-
-		$gallery_image_alt = get_post_meta($gallery_attachment_id, '_wp_attachment_image_alt', true);
-
-		$thumbs[] = array(
-			'image_url' => $gallery_image_url,
-			'label'     => $gallery_image_alt ? $gallery_image_alt : $main_product['name'],
-		);
-	}
-
-	if (empty($main_product['image_url']) && ! empty($thumbs[0]['image_url'])) {
-		$main_product['image_url'] = $thumbs[0]['image_url'];
-		$main_product['alt']       = $thumbs[0]['label'];
-	}
+if (! empty($main_product['image_url'])) {
+	$thumbs[] = array(
+		'image_url' => $main_product['image_url'],
+		'label'     => $main_product['alt'],
+	);
 }
 
-$related_products = array(
-	array(
-		'image'   => 'oso-peluche.png',
-		'alt'     => __('Conejo de peluche para bebé', 'kulimbos'),
-		'name'    => __('Conejo de peluche', 'kulimbos'),
-		'rating'  => 5,
-		'reviews' => 96,
-		'price'   => '$69.900',
-		'url'     => home_url('/productos/conejo-de-peluche/'),
-	),
-	array(
-		'image'   => '',
-		'alt'     => __('Espacio reservado para elefante de peluche', 'kulimbos'),
-		'name'    => __('Elefante de peluche', 'kulimbos'),
-		'rating'  => 4.5,
-		'reviews' => 74,
-		'price'   => '$79.900',
-		'url'     => home_url('/productos/elefante-de-peluche/'),
-	),
-	array(
-		'image'   => '',
-		'alt'     => __('Espacio reservado para león de peluche', 'kulimbos'),
-		'name'    => __('León de peluche', 'kulimbos'),
-		'rating'  => 4.5,
-		'reviews' => 81,
-		'price'   => '$74.900',
-		'url'     => home_url('/productos/leon-de-peluche/'),
-	),
-	array(
-		'image'   => '',
-		'alt'     => __('Espacio reservado para panda de peluche', 'kulimbos'),
-		'name'    => __('Panda de peluche', 'kulimbos'),
-		'rating'  => 4.5,
-		'reviews' => 63,
-		'price'   => '$79.900',
-		'url'     => home_url('/productos/panda-de-peluche/'),
-	),
-	array(
-		'image'   => '',
-		'alt'     => __('Espacio reservado para jirafa de peluche', 'kulimbos'),
-		'name'    => __('Jirafa de peluche', 'kulimbos'),
-		'rating'  => 5,
-		'reviews' => 55,
-		'price'   => '$69.900',
-		'url'     => home_url('/productos/jirafa-de-peluche/'),
-	),
-);
+foreach ($gallery_ids as $gallery_attachment_id) {
+	$gallery_image_url = wp_get_attachment_image_url($gallery_attachment_id, 'kulimbos-product');
 
-if (is_singular('producto') && function_exists('kulimbos_get_primary_product_category')) {
-	$related_products = array();
-	$product_id = get_queried_object_id();
-	$term       = kulimbos_get_primary_product_category($product_id);
+	if (! $gallery_image_url) {
+		continue;
+	}
+
+	$gallery_image_alt = get_post_meta($gallery_attachment_id, '_wp_attachment_image_alt', true);
+
+	$thumbs[] = array(
+		'image_url' => $gallery_image_url,
+		'label'     => $gallery_image_alt ? $gallery_image_alt : $main_product['name'],
+	);
+}
+
+if (empty($main_product['image_url']) && ! empty($thumbs[0]['image_url'])) {
+	$main_product['image_url'] = $thumbs[0]['image_url'];
+	$main_product['alt']       = $thumbs[0]['label'];
+}
+
+$related_products = array();
+
+if (function_exists('kulimbos_get_primary_product_category')) {
+	$term = kulimbos_get_primary_product_category($product_id);
 
 	if ($term instanceof WP_Term) {
 		$related_query = new WP_Query(
@@ -304,7 +248,12 @@ if (is_singular('producto') && function_exists('kulimbos_get_primary_product_cat
 			while ($related_query->have_posts()) {
 				$related_query->the_post();
 				$related_id    = get_the_ID();
-				$related_price = get_post_meta($related_id, 'kulimbos_product_price', true);
+				$related_price = function_exists('kulimbos_get_product_price_data')
+					? kulimbos_get_product_price_data($related_id)
+					: array(
+						'label'     => get_post_meta($related_id, 'kulimbos_product_price', true) ? '$' . number_format((int) preg_replace('/[^\d]/', '', (string) get_post_meta($related_id, 'kulimbos_product_price', true)), 0, ',', '.') : __('Consultar precio', 'kulimbos'),
+						'effective' => (int) preg_replace('/[^\d]/', '', (string) get_post_meta($related_id, 'kulimbos_product_price', true)),
+					);
 				$related_stock = function_exists('kulimbos_get_product_stock') ? kulimbos_get_product_stock($related_id) : (int) get_post_meta($related_id, 'kulimbos_product_stock', true);
 				$related_review_summary = function_exists('kulimbos_get_product_review_summary')
 					? kulimbos_get_product_review_summary($related_id)
@@ -321,8 +270,8 @@ if (is_singular('producto') && function_exists('kulimbos_get_primary_product_cat
 					'name'      => get_the_title(),
 					'rating'    => (float) $related_review_summary['rating'],
 					'reviews'   => (int) $related_review_summary['reviews'],
-					'price'     => $related_price ? '$' . number_format((int) preg_replace('/[^\d]/', '', $related_price), 0, ',', '.') : __('Consultar precio', 'kulimbos'),
-					'price_value' => $related_price ? (int) preg_replace('/[^\d]/', '', $related_price) : 0,
+					'price'     => $related_price['label'],
+					'price_value' => (int) $related_price['effective'],
 					'stock'     => $related_stock,
 					'url'       => get_permalink(),
 				);
@@ -333,23 +282,7 @@ if (is_singular('producto') && function_exists('kulimbos_get_primary_product_cat
 	}
 }
 
-$reviews = array(
-	array(
-		'name' => __('María G.', 'kulimbos'),
-		'text' => __('Es hermosísimo y súper suave. A mi hijo le encanta dormir con su osito todas las noches. Excelente calidad.', 'kulimbos'),
-		'date' => __('Hace 2 días', 'kulimbos'),
-	),
-	array(
-		'name' => __('Juan P.', 'kulimbos'),
-		'text' => __('El tamaño es perfecto y los materiales se sienten de muy buena calidad. Llegó muy rápido y bien empacado.', 'kulimbos'),
-		'date' => __('Hace 1 semana', 'kulimbos'),
-	),
-	array(
-		'name' => __('Carolina M.', 'kulimbos'),
-		'text' => __('Lo compré para regalar y fue un éxito. Viene en una bolsa muy linda, ideal para regalo.', 'kulimbos'),
-		'date' => __('Hace 2 semanas', 'kulimbos'),
-	),
-);
+$reviews = array();
 
 $benefits = array(
 	array(
@@ -374,15 +307,12 @@ $benefits = array(
 	),
 );
 
-$fallback_image_filename = 'oso-peluche.png';
-$fallback_image_path     = $theme_dir . '/assets/img/products/' . $fallback_image_filename;
-$fallback_image_url      = $theme_uri . '/assets/img/products/' . $fallback_image_filename;
-$main_image_path         = ! empty($main_product['image']) ? $theme_dir . '/assets/img/products/' . sanitize_file_name($main_product['image']) : $fallback_image_path;
-$main_image_url          = ! empty($main_product['image_url']) ? $main_product['image_url'] : (! empty($main_product['image']) ? $theme_uri . '/assets/img/products/' . sanitize_file_name($main_product['image']) : $fallback_image_url);
+$main_image_path         = ! empty($main_product['image']) ? $theme_dir . '/assets/img/products/' . sanitize_file_name($main_product['image']) : '';
+$main_image_url          = ! empty($main_product['image_url']) ? $main_product['image_url'] : (! empty($main_product['image']) ? $theme_uri . '/assets/img/products/' . sanitize_file_name($main_product['image']) : '');
 $product_stock   = max(0, (int) $main_product['stock']);
 $quantity_min    = $product_stock > 0 ? 1 : 0;
 $quantity_value  = $product_stock > 0 ? 1 : 0;
-$product_url     = get_permalink() ?: home_url('/productos/oso-de-peluche/');
+$product_url     = get_permalink() ?: (get_post_type_archive_link('producto') ?: home_url('/productos/'));
 $whatsapp_message = sprintf(
 	__(
 		"Hola, estoy interesado en este producto:\n\nProducto: %1\$s\nPrecio: %2\$s COP\nURL: %3\$s\nCantidad: %4\$s",
@@ -607,6 +537,146 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 	</div>
 </section>
 
+<?php if (! empty($product_sheet_data['technical']) || ! empty($product_sheet_data['features']) || ! empty($product_sheet_data['designs']) || ! empty($product_sheet_data['variants']) || ! empty($product_sheet_data['size_tables']) || ! empty($product_sheet_data['content_blocks']) || ! empty($product_sheet_data['pending_warning'])) : ?>
+<section class="product-technical-sheet" aria-labelledby="product-technical-sheet-title">
+	<div class="container">
+		<h2 class="product-section-title" id="product-technical-sheet-title"><?php esc_html_e('Ficha técnica', 'kulimbos'); ?></h2>
+
+		<?php if (! empty($product_sheet_data['pending_warning'])) : ?>
+			<div class="product-technical-sheet__notice" role="note">
+				<strong><?php esc_html_e('Pendiente de verificación', 'kulimbos'); ?></strong>
+				<?php echo wp_kses_post(wpautop(esc_html($product_sheet_data['pending_warning']))); ?>
+			</div>
+		<?php endif; ?>
+
+		<div class="product-technical-sheet__grid">
+			<?php if (! empty($product_sheet_data['technical'])) : ?>
+				<section class="product-spec-panel" aria-labelledby="product-specs-title">
+					<h3 id="product-specs-title"><?php esc_html_e('Datos principales', 'kulimbos'); ?></h3>
+					<dl class="product-spec-list">
+						<?php foreach ($product_sheet_data['technical'] as $item) : ?>
+							<div>
+								<dt><?php echo esc_html($item['label']); ?></dt>
+								<dd><?php echo esc_html($item['value']); ?></dd>
+							</div>
+						<?php endforeach; ?>
+					</dl>
+				</section>
+			<?php endif; ?>
+
+			<?php if (! empty($product_sheet_data['features'])) : ?>
+				<section class="product-spec-panel" aria-labelledby="product-features-title">
+					<h3 id="product-features-title"><?php esc_html_e('Características principales', 'kulimbos'); ?></h3>
+					<ul class="product-spec-bullets" role="list">
+						<?php foreach ($product_sheet_data['features'] as $feature) : ?>
+							<li><?php echo esc_html($feature); ?></li>
+						<?php endforeach; ?>
+					</ul>
+				</section>
+			<?php endif; ?>
+		</div>
+
+		<?php if (! empty($product_sheet_data['designs']) || ! empty($product_sheet_data['variants'])) : ?>
+			<section class="product-options-sheet" aria-labelledby="product-options-title">
+				<h3 id="product-options-title"><?php esc_html_e('Diseños y variantes', 'kulimbos'); ?></h3>
+
+				<?php if (! empty($product_sheet_data['designs'])) : ?>
+					<ul class="product-design-list" role="list">
+						<?php foreach ($product_sheet_data['designs'] as $design) : ?>
+							<li>
+								<strong><?php echo esc_html($design['label']); ?></strong>
+								<?php if (! empty($design['description'])) : ?>
+									<span><?php echo esc_html($design['description']); ?></span>
+								<?php endif; ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				<?php endif; ?>
+
+				<?php if (! empty($product_sheet_data['variants'])) : ?>
+					<div class="product-table-wrap">
+						<table class="product-data-table">
+							<thead>
+								<tr>
+									<th scope="col"><?php esc_html_e('Variante', 'kulimbos'); ?></th>
+									<th scope="col"><?php esc_html_e('Diseño', 'kulimbos'); ?></th>
+									<th scope="col"><?php esc_html_e('Tamaño', 'kulimbos'); ?></th>
+									<th scope="col"><?php esc_html_e('Color', 'kulimbos'); ?></th>
+									<th scope="col"><?php esc_html_e('Precio', 'kulimbos'); ?></th>
+									<th scope="col"><?php esc_html_e('Estado', 'kulimbos'); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ($product_sheet_data['variants'] as $variant) : ?>
+									<?php
+									$variant_price = ! empty($variant['sale_price']) ? (int) $variant['sale_price'] : (int) $variant['regular_price'];
+									?>
+									<tr>
+										<th scope="row"><?php echo esc_html($variant['label']); ?></th>
+										<td><?php echo esc_html($variant['design']); ?></td>
+										<td><?php echo esc_html($variant['size']); ?></td>
+										<td><?php echo esc_html($variant['color']); ?></td>
+										<td><?php echo $variant_price > 0 ? esc_html('$' . number_format($variant_price, 0, ',', '.')) : esc_html__('Por definir', 'kulimbos'); ?></td>
+										<td><?php echo esc_html($product_status_labels[$variant['status']] ?? $variant['status']); ?></td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				<?php endif; ?>
+			</section>
+		<?php endif; ?>
+
+		<?php if (! empty($product_sheet_data['content_blocks'])) : ?>
+			<div class="product-content-sheet">
+				<?php foreach ($product_sheet_data['content_blocks'] as $block) : ?>
+					<section class="product-spec-panel">
+						<h3><?php echo esc_html($block['title']); ?></h3>
+						<?php echo wp_kses_post(wpautop(esc_html($block['content']))); ?>
+					</section>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
+
+		<?php if (! empty($product_sheet_data['size_tables'])) : ?>
+			<section class="product-size-tables" aria-labelledby="product-size-tables-title">
+				<h3 id="product-size-tables-title"><?php esc_html_e('Tablas técnicas', 'kulimbos'); ?></h3>
+				<?php foreach ($product_sheet_data['size_tables'] as $table) : ?>
+					<div class="product-table-wrap">
+						<h4><?php echo esc_html($table['title']); ?></h4>
+						<table class="product-data-table">
+							<thead>
+								<tr>
+									<?php foreach ($table['columns'] as $column) : ?>
+										<th scope="col"><?php echo esc_html($column); ?></th>
+									<?php endforeach; ?>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ($table['rows'] as $row) : ?>
+									<tr>
+										<?php foreach ($row as $index => $cell) : ?>
+											<?php if (0 === $index) : ?>
+												<th scope="row"><?php echo esc_html($cell); ?></th>
+											<?php else : ?>
+												<td><?php echo esc_html($cell); ?></td>
+											<?php endif; ?>
+										<?php endforeach; ?>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+						<?php if (! empty($table['source_note'])) : ?>
+							<p class="product-table-wrap__note"><?php echo esc_html($table['source_note']); ?></p>
+						<?php endif; ?>
+					</div>
+				<?php endforeach; ?>
+			</section>
+		<?php endif; ?>
+	</div>
+</section>
+<?php endif; ?>
+
 <?php if (! empty($related_products)) : ?>
 <section class="product-related" aria-labelledby="product-related-title">
 	<div class="container">
@@ -679,6 +749,7 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 </section>
 <?php endif; ?>
 
+<?php if (! empty($reviews)) : ?>
 <section class="product-reviews" aria-labelledby="product-reviews-title">
 	<div class="container">
 		<div class="product-reviews__header">
@@ -736,6 +807,7 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 		</div>
 	</div>
 </section>
+<?php endif; ?>
 
 <section class="product-benefits-strip" aria-label="<?php esc_attr_e('Beneficios de Kulimbos', 'kulimbos'); ?>">
 	<div class="container">

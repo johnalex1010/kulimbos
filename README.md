@@ -90,7 +90,7 @@ El tema no requiere variables de entorno propias. Usa las constantes nativas de 
 | Constante | Efecto en el tema |
 |-----------|-------------------|
 | `WP_DEBUG true` | Carga `assets/css/main.css` con versión `filemtime()`. Permite inspeccionar el CSS sin ofuscar. |
-| `WP_DEBUG false` | Carga `assets/production/mincss/main.min.css` con versión estática `KULIMBOS_VERSION`. |
+| `WP_DEBUG false` | Carga `assets/production/mincss/main.min.css` con versión `filemtime()`. |
 | JS principal | Carga `assets/production/minjs/main.min.js` con versión `filemtime()` para invalidar caché después de cada build. |
 
 ---
@@ -324,19 +324,19 @@ Crear en la raíz del tema con la cabecera:
 
 ## Catálogo de productos
 
-El tema registra el CPT `producto`, la taxonomía jerárquica `categoria_producto` y taxonomías internas para filtros: `edad_producto`, `tamano_producto`, `color_producto` y `material_producto`.
+El tema registra el CPT `producto`, la taxonomía jerárquica `categoria_producto` y taxonomías internas para filtros: `edad_producto`, `tamano_producto`, `color_producto`, `material_producto`, `marca_producto` y `tipo_producto`.
 
 ### Rutas recomendadas
 
 - Archivo general: `/productos/`
 - Categoría padre: `/categoria/juguetes/`
 - Subcategoría: `/categoria/juguetes/peluches/`
-- Producto: `/productos/juguetes/peluches/oso-de-peluche/`
+- Producto: `/productos/categoria-padre/subcategoria/slug-del-producto/`
 
 La miga de pan recomendada para un producto es:
 
 ```text
-Inicio / Categorías / Juguetes / Peluches / Oso de peluche
+Inicio / Categorías / Categoría padre / Subcategoría / Nombre del producto
 ```
 
 ### Flujo en WordPress
@@ -351,17 +351,117 @@ Inicio / Categorías / Juguetes / Peluches / Oso de peluche
    - **Tamaños** (`tamano_producto`)
    - **Colores** (`color_producto`)
    - **Materiales** (`material_producto`)
-7. Configurar **Precio** y **Stock** desde la caja **Datos del producto**.
+   - **Marcas** (`marca_producto`)
+   - **Tipos** (`tipo_producto`)
+7. Configurar **Precio** y **Stock** desde la caja **Datos comerciales**.
    - `kulimbos_product_price`
    - `kulimbos_product_stock`
+   - `kulimbos_product_regular_price`
+   - `kulimbos_product_sale_price`
+   - `kulimbos_product_sku`
+8. Completar la caja **Ficha técnica del producto** cuando el producto requiera datos como marca, EAN, INVIMA, presentación, etapa/edad, origen, capacidad, dimensiones, estampado o material técnico.
+9. Completar la caja **Contenido comercial y validación** para características, cuidados, personalización, modo de preparación, advertencias, ingredientes explicados, notas de verificación, pendientes y fuentes internas.
+10. Completar la caja **Variantes, diseños y tablas técnicas** cuando el producto tenga diseños, tallas, combinaciones, presentaciones o precios por variante.
 
 La calificación no se edita manualmente en el producto. Se calcula desde comentarios aprobados que tengan `kulimbos_comment_rating` entre 1 y 5.
 
 Los metadatos heredados `kulimbos_product_age`, `kulimbos_product_size`, `kulimbos_product_color` y `kulimbos_product_material` se mantienen como fallback para no romper productos antiguos, pero la configuración recomendada es por taxonomías.
 
-Los filtros por edad, tamaño, color y material aceptan múltiples términos por producto. En el frontend el producto se muestra si coincide con cualquiera de los términos seleccionados. Si un producto no tiene configurado un filtro, no se le asigna un valor por defecto inventado y no aparece al seleccionar esa opción.
+Los filtros por edad, tamaño, color, material, marca y tipo aceptan múltiples términos por producto. En el frontend el producto se muestra si coincide con cualquiera de los términos seleccionados. Si un producto no tiene configurado un filtro, no se le asigna un valor por defecto inventado y no aparece al seleccionar esa opción.
 
 En **Productos → Colores**, cada término tiene el campo **Color visual** (`kulimbos_color_hex`). Ese valor hexadecimal controla el swatch mostrado en el frontend. Si se crea un color nuevo, configurar ese campo antes de usarlo en productos.
+
+### Fichas técnicas de producto
+
+El CPT `producto` soporta fichas técnicas ampliadas para productos simples, productos personalizados, sets por combinación, prendas con tablas de tallas, termos personalizados, fórmulas infantiles, alimentos lácteos y nutrición especializada.
+
+Campos escalares registrados:
+
+| Campo | Uso |
+|-------|-----|
+| `kulimbos_product_regular_price` | Precio regular en COP |
+| `kulimbos_product_sale_price` | Precio oferta en COP |
+| `kulimbos_product_sku` | SKU o referencia interna |
+| `kulimbos_product_ean` | Código EAN |
+| `kulimbos_product_invima` | Registro INVIMA |
+| `kulimbos_product_brand` | Marca visible como fallback |
+| `kulimbos_product_presentation` | Presentación del producto |
+| `kulimbos_product_stage_age` | Etapa o edad visible |
+| `kulimbos_product_origin` | País de origen |
+| `kulimbos_product_capacity` | Capacidad |
+| `kulimbos_product_dimensions` | Dimensiones generales |
+| `kulimbos_product_print_method` | Técnica de estampado o impresión |
+| `kulimbos_product_material_detail` | Material técnico completo |
+
+Campos de texto largo:
+
+- `kulimbos_product_care_instructions`
+- `kulimbos_product_personalization_instructions`
+- `kulimbos_product_usage_occasions`
+- `kulimbos_product_preparation_mode`
+- `kulimbos_product_warnings`
+- `kulimbos_product_key_ingredients`
+- `kulimbos_product_competitive_angle`
+- `kulimbos_product_verification_note`
+- `kulimbos_product_pending_verification`
+- `kulimbos_product_source_notes`
+
+Campos estructurados:
+
+- `kulimbos_product_features`: lista de características, una por línea en el admin.
+- `kulimbos_product_reference_images`: lista de nombres, rutas o notas de imágenes de referencia.
+- `kulimbos_product_designs`: JSON con `id`, `label`, `description` y `status`.
+- `kulimbos_product_variants`: JSON con `id`, `label`, `design`, `size`, `color`, `presentation`, `regular_price`, `sale_price`, `stock` y `status`.
+- `kulimbos_product_size_tables`: JSON con `title`, `source_note`, `columns` y `rows`.
+- `kulimbos_product_market_prices`: JSON con `source`, `location`, `price_type`, `price_label`, `conditions` y `url_or_note`.
+
+Estados permitidos para diseños y variantes:
+
+- `active`
+- `draft`
+- `pending`
+- `unavailable`
+
+Ejemplo de variante:
+
+```json
+[
+  {
+    "id": "familiar-100x150",
+    "label": "Familiar · 100 x 150 cm",
+    "design": "Familiar",
+    "size": "100 x 150 cm",
+    "color": "",
+    "presentation": "",
+    "regular_price": "",
+    "sale_price": "",
+    "stock": "",
+    "status": "pending"
+  }
+]
+```
+
+Ejemplo de tabla técnica:
+
+```json
+[
+  {
+    "title": "Camiseta cuello redondo mujer",
+    "source_note": "Ref. 804037, dato suministrado por el usuario",
+    "columns": ["Talla", "Pecho (cm)", "Largo (cm)"],
+    "rows": [
+      ["S", "40", "58"],
+      ["M", "42", "59.5"],
+      ["L", "44", "61"],
+      ["XL", "47", "62.5"]
+    ]
+  }
+]
+```
+
+El campo `kulimbos_product_price` sigue siendo el precio efectivo base para listados, carrito, favoritos y WhatsApp. Si hay variantes activas con precio y no hay precio base suficiente, el frontend puede mostrar un precio tipo “Desde $X”. El carrito todavía no selecciona variantes avanzadas; no se debe asumir talla, color, diseño o presentación sin una selección explícita del cliente.
+
+Para productos de fórmulas, alimentos lácteos o nutrición médica, usar siempre los campos de advertencias, modo de preparación, INVIMA/EAN y pendientes de verificación. No publicar claims médicos o regulatorios como definitivos cuando estén marcados como pendientes o dependan de revisión legal/editorial.
 
 WordPress selecciona automáticamente:
 
@@ -392,7 +492,7 @@ Favoritos funciona sin login y guarda productos anónimos en `localStorage` con 
 
 El tema refresca las reglas de rewrite una sola vez mediante una versión interna. Si aun así alguna ruta antigua queda en caché, ir a **Ajustes → Enlaces permanentes** y guardar una vez.
 
-Para facilitar pruebas locales, el tema crea una vez, solo para administradores, términos base (`Juguetes`, `Peluches`, `Paseo`), términos de filtros (`0 a 1 años`, `Pequeño`, `Café`, `Algodón`, etc.) y productos de ejemplo (`Oso de peluche`, `Coche de bebé`) si todavía no existen.
+Para facilitar la carga posterior desde WordPress, el tema puede crear una vez, solo para administradores, términos base (`Juguetes`, `Peluches`, `Paseo`) y términos de filtros (`0 a 1 años`, `Pequeño`, `Café`, `Algodón`, etc.) si todavía no existen. El tema no crea productos de ejemplo: si no hay productos publicados, el catálogo muestra un mensaje de vacío.
 
 ---
 

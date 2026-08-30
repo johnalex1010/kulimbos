@@ -2,6 +2,29 @@
 	max-width: 980px;
 }
 
+.kulimbos-product-admin-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0 16px;
+	max-width: 980px;
+}
+
+.kulimbos-product-admin-grid p {
+	margin-top: 0;
+}
+
+#kulimbos-product-content-sheet textarea,
+#kulimbos-product-variants-sheet textarea,
+#kulimbos-product-technical-sheet textarea {
+	max-width: 980px;
+}
+
+#kulimbos-product-variants-sheet textarea.code {
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
 .kulimbos-product-gallery-field__intro {
 	display: flex;
 	gap: 16px;
@@ -148,6 +171,10 @@
 }
 
 @media (max-width: 782px) {
+	.kulimbos-product-admin-grid {
+		grid-template-columns: 1fr;
+	}
+
 	.kulimbos-product-gallery-field__intro {
 		display: grid;
 	}

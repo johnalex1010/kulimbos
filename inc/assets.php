@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Estrategia de CSS por entorno:
  *   WP_DEBUG true  → assets/css/main.css          (expandido, legible, filemtime)
- *   WP_DEBUG false → assets/production/mincss/main.min.css  (minificado, versión estática)
+ *   WP_DEBUG false → assets/production/mincss/main.min.css  (minificado, filemtime)
  *
  * Ambos archivos los genera Gulp. Nunca editar manualmente.
  */
@@ -35,7 +35,7 @@ function kulimbos_enqueue_assets(): void {
 
 	// CSS conserva la estrategia por entorno; JS usa filemtime para invalidar caché al compilar.
 	$css_version = file_exists( $css_path )
-		? ( $is_debug ? filemtime( $css_path ) : KULIMBOS_VERSION )
+		? filemtime( $css_path )
 		: KULIMBOS_VERSION;
 
 	$js_version = file_exists( $dist_js )

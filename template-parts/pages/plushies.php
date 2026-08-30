@@ -20,7 +20,7 @@ $hero_image = array(
 	'alt'  => __('Peluches suaves para bebés y niños', 'kulimbos'),
 );
 
-$page_title       = $is_all_products_view ? __('Categorías', 'kulimbos') : __('Peluches', 'kulimbos');
+$page_title       = $is_all_products_view ? __('Productos', 'kulimbos') : __('Peluches', 'kulimbos');
 $page_description = __('Compañeros suaves y tiernos para abrazar, jugar y crear momentos inolvidables.', 'kulimbos');
 $current_term     = (! $is_all_products_view && is_tax('categoria_producto')) ? get_queried_object() : null;
 
@@ -60,176 +60,7 @@ $feature_items = array(
 	),
 );
 
-$products = array(
-	array(
-		'image'    => 'oso-peluche.png',
-		'alt'      => __('Oso de peluche suave', 'kulimbos'),
-		'name'     => __('Oso de peluche', 'kulimbos'),
-		'category' => 'osos',
-		'age'      => '0-1',
-		'size'     => 'mediano',
-		'color'    => 'cafe',
-		'material' => 'felpa',
-		'rating'   => 4.5,
-		'reviews'  => 128,
-		'price'    => 79900,
-		'url'      => home_url('/productos/oso-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para conejo rosado de peluche', 'kulimbos'),
-		'name'     => __('Conejo rosado', 'kulimbos'),
-		'category' => 'conejos',
-		'age'      => '0-1',
-		'size'     => 'pequeno',
-		'color'    => 'rosado',
-		'material' => 'algodon',
-		'rating'   => 5,
-		'reviews'  => 96,
-		'price'    => 69900,
-		'url'      => home_url('/productos/conejo-rosado/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para elefante de peluche', 'kulimbos'),
-		'name'     => __('Elefante de peluche', 'kulimbos'),
-		'category' => 'selva',
-		'age'      => '1-3',
-		'size'     => 'grande',
-		'color'    => 'gris',
-		'material' => 'hipoalergenico',
-		'rating'   => 4.5,
-		'reviews'  => 74,
-		'price'    => 79900,
-		'url'      => home_url('/productos/elefante-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para león de peluche', 'kulimbos'),
-		'name'     => __('León de peluche', 'kulimbos'),
-		'category' => 'selva',
-		'age'      => '3-6',
-		'size'     => 'mediano',
-		'color'    => 'naranja',
-		'material' => 'felpa',
-		'rating'   => 4.5,
-		'reviews'  => 81,
-		'price'    => 74900,
-		'url'      => home_url('/productos/leon-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para panda de peluche', 'kulimbos'),
-		'name'     => __('Panda de peluche', 'kulimbos'),
-		'category' => 'selva',
-		'age'      => '1-3',
-		'size'     => 'mediano',
-		'color'    => 'gris',
-		'material' => 'felpa',
-		'rating'   => 4.5,
-		'reviews'  => 63,
-		'price'    => 79900,
-		'url'      => home_url('/productos/panda-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para jirafa de peluche', 'kulimbos'),
-		'name'     => __('Jirafa de peluche', 'kulimbos'),
-		'category' => 'selva',
-		'age'      => '3-6',
-		'size'     => 'grande',
-		'color'    => 'amarillo',
-		'material' => 'algodon',
-		'rating'   => 5,
-		'reviews'  => 55,
-		'price'    => 69900,
-		'url'      => home_url('/productos/jirafa-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para dinosaurio de peluche', 'kulimbos'),
-		'name'     => __('Dinosaurio de peluche', 'kulimbos'),
-		'category' => 'personajes',
-		'age'      => '3-6',
-		'size'     => 'grande',
-		'color'    => 'verde',
-		'material' => 'hipoalergenico',
-		'rating'   => 4.5,
-		'reviews'  => 18,
-		'price'    => 89900,
-		'url'      => home_url('/productos/dinosaurio-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para ballena de peluche', 'kulimbos'),
-		'name'     => __('Ballena de peluche', 'kulimbos'),
-		'category' => 'marinos',
-		'age'      => '0-1',
-		'size'     => 'pequeno',
-		'color'    => 'azul',
-		'material' => 'algodon',
-		'rating'   => 4.5,
-		'reviews'  => 42,
-		'price'    => 59900,
-		'url'      => home_url('/productos/ballena-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para perezoso de peluche', 'kulimbos'),
-		'name'     => __('Perezoso de peluche', 'kulimbos'),
-		'category' => 'selva',
-		'age'      => '6-mas',
-		'size'     => 'extra',
-		'color'    => 'cafe',
-		'material' => 'felpa',
-		'rating'   => 5,
-		'reviews'  => 27,
-		'price'    => 69900,
-		'url'      => home_url('/productos/perezoso-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para vaca de peluche', 'kulimbos'),
-		'name'     => __('Vaca de peluche', 'kulimbos'),
-		'category' => 'granja',
-		'age'      => '1-3',
-		'size'     => 'mediano',
-		'color'    => 'gris',
-		'material' => 'felpa',
-		'rating'   => 5,
-		'reviews'  => 31,
-		'price'    => 69900,
-		'url'      => home_url('/productos/vaca-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para perro de peluche', 'kulimbos'),
-		'name'     => __('Perro de peluche', 'kulimbos'),
-		'category' => 'personajes',
-		'age'      => '1-3',
-		'size'     => 'grande',
-		'color'    => 'cafe',
-		'material' => 'hipoalergenico',
-		'rating'   => 4.5,
-		'reviews'  => 68,
-		'price'    => 74900,
-		'url'      => home_url('/productos/perro-de-peluche/'),
-	),
-	array(
-		'image'    => '',
-		'alt'      => __('Espacio reservado para pulpo reversible', 'kulimbos'),
-		'name'     => __('Pulpo reversible', 'kulimbos'),
-		'category' => 'marinos',
-		'age'      => '6-mas',
-		'size'     => 'pequeno',
-		'color'    => 'azul',
-		'material' => 'algodon',
-		'rating'   => 5,
-		'reviews'  => 39,
-		'price'    => 59900,
-		'url'      => home_url('/productos/pulpo-reversible/'),
-	),
-);
+$products = array();
 
 if ($is_all_products_view || is_post_type_archive('producto') || is_tax('categoria_producto')) {
 	$query_args = array(
@@ -259,9 +90,13 @@ if ($is_all_products_view || is_post_type_archive('producto') || is_tax('categor
 			$products_query->the_post();
 			$product_id    = get_the_ID();
 			$product_term  = function_exists('kulimbos_get_primary_product_category') ? kulimbos_get_primary_product_category($product_id) : null;
-			$product_price = get_post_meta($product_id, 'kulimbos_product_price', true);
+			$product_price = function_exists('kulimbos_get_product_price_data')
+				? kulimbos_get_product_price_data($product_id)
+				: array(
+					'effective' => (int) preg_replace('/[^\d]/', '', (string) get_post_meta($product_id, 'kulimbos_product_price', true)),
+					'has_price' => '' !== get_post_meta($product_id, 'kulimbos_product_price', true),
+				);
 			$product_stock = function_exists('kulimbos_get_product_stock') ? kulimbos_get_product_stock($product_id) : (int) get_post_meta($product_id, 'kulimbos_product_stock', true);
-			$product_price_value = '' !== $product_price ? (int) preg_replace('/[^\d]/', '', $product_price) : 0;
 			$product_terms = get_the_terms($product_id, 'categoria_producto');
 			$product_categories = array();
 			$product_age = function_exists('kulimbos_get_product_filter_slugs') ? kulimbos_get_product_filter_slugs($product_id, 'edad_producto', 'kulimbos_product_age') : array_filter(array(sanitize_key(get_post_meta($product_id, 'kulimbos_product_age', true))));
@@ -308,8 +143,9 @@ if ($is_all_products_view || is_post_type_archive('producto') || is_tax('categor
 				'material'  => $product_material,
 				'rating'    => (float) $product_review_summary['rating'],
 				'reviews'   => (int) $product_review_summary['reviews'],
-				'price'     => $product_price_value,
-				'has_price' => '' !== $product_price,
+				'price'     => (int) $product_price['effective'],
+				'price_label' => isset($product_price['label']) ? $product_price['label'] : '',
+				'has_price' => (bool) $product_price['has_price'],
 				'stock'     => $product_stock,
 				'url'       => get_permalink(),
 			);
@@ -475,7 +311,11 @@ $color_swatch_map = array(
 				<span><?php esc_html_e('Ocultar filtros', 'kulimbos'); ?></span>
 			</button>
 			<p class="plushies-toolbar__count" data-filter-count>
-				<?php echo esc_html(sprintf(__('Mostrando 1-12 de %d productos', 'kulimbos'), count($products))); ?>
+				<?php
+				echo empty($products)
+					? esc_html__('No hay productos publicados todavía.', 'kulimbos')
+					: esc_html(sprintf(__('Mostrando 1-12 de %d productos', 'kulimbos'), count($products)));
+				?>
 			</p>
 			<label class="plushies-toolbar__sort">
 				<span><?php esc_html_e('Ordenar por:', 'kulimbos'); ?></span>
@@ -587,6 +427,7 @@ $color_swatch_map = array(
 						$product_color_slugs = is_array($product['color']) ? $product['color'] : array($product['color']);
 						$product_material_slugs = is_array($product['material']) ? $product['material'] : array($product['material']);
 						$product_has_price = array_key_exists('has_price', $product) ? (bool) $product['has_price'] : true;
+						$product_price_label = ! empty($product['price_label']) ? $product['price_label'] : '$' . number_format((int) $product['price'], 0, ',', '.');
 						$product_cart_id = isset($product['id']) ? (string) $product['id'] : sanitize_title($product['name']);
 						$product_stock = isset($product['stock']) ? absint($product['stock']) : 99;
 						?>
@@ -641,7 +482,7 @@ $color_swatch_map = array(
 									<span class="product-card__price">
 										<?php
 										echo $product_has_price
-											? esc_html('$' . number_format($product['price'], 0, ',', '.'))
+											? esc_html($product_price_label)
 											: esc_html__('Consultar precio', 'kulimbos');
 										?>
 									</span>
@@ -664,13 +505,19 @@ $color_swatch_map = array(
 					<?php endforeach; ?>
 				</ul>
 
-				<p class="plushies-empty" data-filter-empty hidden><?php esc_html_e('No encontramos peluches con esos filtros.', 'kulimbos'); ?></p>
+				<?php if (empty($products)) : ?>
+					<p class="plushies-empty"><?php esc_html_e('Aún no hay productos publicados. Cuando cargues productos en WordPress aparecerán aquí automáticamente.', 'kulimbos'); ?></p>
+				<?php else : ?>
+					<p class="plushies-empty" data-filter-empty hidden><?php esc_html_e('No encontramos productos con esos filtros.', 'kulimbos'); ?></p>
+				<?php endif; ?>
 
-				<nav class="plushies-pagination" data-filter-pagination aria-label="<?php esc_attr_e('Paginación de peluches', 'kulimbos'); ?>">
-					<button type="button" data-filter-page-prev aria-label="<?php esc_attr_e('Página anterior', 'kulimbos'); ?>"><?php kulimbos_the_icon('chevron-left', '', 18); ?></button>
-					<span class="is-current">1</span>
-					<button type="button" data-filter-page-next aria-label="<?php esc_attr_e('Página siguiente', 'kulimbos'); ?>"><?php kulimbos_the_icon('chevron-right', '', 18); ?></button>
-				</nav>
+				<?php if (! empty($products)) : ?>
+					<nav class="plushies-pagination" data-filter-pagination aria-label="<?php esc_attr_e('Paginación de productos', 'kulimbos'); ?>">
+						<button type="button" data-filter-page-prev aria-label="<?php esc_attr_e('Página anterior', 'kulimbos'); ?>"><?php kulimbos_the_icon('chevron-left', '', 18); ?></button>
+						<span class="is-current">1</span>
+						<button type="button" data-filter-page-next aria-label="<?php esc_attr_e('Página siguiente', 'kulimbos'); ?>"><?php kulimbos_the_icon('chevron-right', '', 18); ?></button>
+					</nav>
+				<?php endif; ?>
 			</div>
 		</div>
 

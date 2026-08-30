@@ -3,6 +3,17 @@
 .featured-products {
   padding-bottom: 34px;
 }
+
+.featured-products__empty {
+  margin: 0;
+  padding: 24px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #17182b;
+  font-weight: var(--font-weight-extrabold);
+  text-align: center;
+  box-shadow: 0 12px 26px rgba(31, 26, 21, 0.05);
+}
 // ── Grid de productos ─────────────────────────────────────────────────────────
 
 .product-grid {

@@ -65,7 +65,7 @@ function kulimbos_register_cpt_producto(): void {
 		'menu_position'      => 6,
 		'menu_icon'          => 'dashicons-products',
 		'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt', 'custom-fields' ),
-		'taxonomies'         => array( 'categoria_producto', 'edad_producto', 'tamano_producto', 'color_producto', 'material_producto' ),
+		'taxonomies'         => array( 'categoria_producto', 'edad_producto', 'tamano_producto', 'color_producto', 'material_producto', 'marca_producto', 'tipo_producto' ),
 	);
 
 	register_post_type( 'producto', $args );
@@ -132,6 +132,16 @@ function kulimbos_register_tax_producto_filtros(): void {
 			'singular_name' => __( 'Material de producto', 'kulimbos' ),
 			'menu_name'     => __( 'Materiales', 'kulimbos' ),
 		),
+		'marca_producto'    => array(
+			'name'          => __( 'Marcas de producto', 'kulimbos' ),
+			'singular_name' => __( 'Marca de producto', 'kulimbos' ),
+			'menu_name'     => __( 'Marcas', 'kulimbos' ),
+		),
+		'tipo_producto'     => array(
+			'name'          => __( 'Tipos de producto', 'kulimbos' ),
+			'singular_name' => __( 'Tipo de producto', 'kulimbos' ),
+			'menu_name'     => __( 'Tipos', 'kulimbos' ),
+		),
 	);
 
 	foreach ( $taxonomies as $taxonomy => $labels_data ) {
@@ -174,6 +184,8 @@ function kulimbos_register_product_meta(): void {
 	$integer_meta_fields = array(
 		'kulimbos_product_price',
 		'kulimbos_product_stock',
+		'kulimbos_product_regular_price',
+		'kulimbos_product_sale_price',
 	);
 
 	foreach ( $integer_meta_fields as $meta_key ) {
@@ -199,6 +211,17 @@ function kulimbos_register_product_meta(): void {
 		'kulimbos_product_size',
 		'kulimbos_product_color',
 		'kulimbos_product_material',
+		'kulimbos_product_sku',
+		'kulimbos_product_ean',
+		'kulimbos_product_invima',
+		'kulimbos_product_brand',
+		'kulimbos_product_presentation',
+		'kulimbos_product_stage_age',
+		'kulimbos_product_origin',
+		'kulimbos_product_capacity',
+		'kulimbos_product_dimensions',
+		'kulimbos_product_print_method',
+		'kulimbos_product_material_detail',
 	);
 
 	foreach ( $meta_fields as $meta_key ) {
@@ -210,6 +233,88 @@ function kulimbos_register_product_meta(): void {
 				'single'            => true,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'sanitize_text_field',
+				'auth_callback'     => static function (): bool {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+	}
+
+	$long_text_meta_fields = array(
+		'kulimbos_product_care_instructions',
+		'kulimbos_product_personalization_instructions',
+		'kulimbos_product_usage_occasions',
+		'kulimbos_product_preparation_mode',
+		'kulimbos_product_warnings',
+		'kulimbos_product_key_ingredients',
+		'kulimbos_product_competitive_angle',
+		'kulimbos_product_verification_note',
+		'kulimbos_product_pending_verification',
+		'kulimbos_product_source_notes',
+	);
+
+	foreach ( $long_text_meta_fields as $meta_key ) {
+		register_post_meta(
+			'producto',
+			$meta_key,
+			array(
+				'type'              => 'string',
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'kulimbos_sanitize_product_long_text_meta',
+				'auth_callback'     => static function (): bool {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+	}
+
+	$string_list_meta_fields = array(
+		'kulimbos_product_features',
+		'kulimbos_product_reference_images',
+	);
+
+	foreach ( $string_list_meta_fields as $meta_key ) {
+		register_post_meta(
+			'producto',
+			$meta_key,
+			array(
+				'type'              => 'array',
+				'single'            => true,
+				'show_in_rest'      => array(
+					'schema' => array(
+						'type'  => 'array',
+						'items' => array(
+							'type' => 'string',
+						),
+					),
+				),
+				'sanitize_callback' => 'kulimbos_sanitize_product_string_list_meta',
+				'auth_callback'     => static function (): bool {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+	}
+
+	$structured_meta_fields = array(
+		'kulimbos_product_designs'       => 'kulimbos_sanitize_product_designs_meta',
+		'kulimbos_product_variants'      => 'kulimbos_sanitize_product_variants_meta',
+		'kulimbos_product_size_tables'   => 'kulimbos_sanitize_product_size_tables_meta',
+		'kulimbos_product_market_prices' => 'kulimbos_sanitize_product_market_prices_meta',
+	);
+
+	foreach ( $structured_meta_fields as $meta_key => $sanitize_callback ) {
+		register_post_meta(
+			'producto',
+			$meta_key,
+			array(
+				'type'              => 'array',
+				'single'            => true,
+				'show_in_rest'      => array(
+					'schema' => kulimbos_get_product_structured_meta_schema( $meta_key ),
+				),
+				'sanitize_callback' => $sanitize_callback,
 				'auth_callback'     => static function (): bool {
 					return current_user_can( 'edit_posts' );
 				},
@@ -254,6 +359,324 @@ function kulimbos_sanitize_product_integer_meta( $value ): string {
 }
 
 /**
+ * Sanitiza texto largo de producto sin permitir HTML arbitrario.
+ *
+ * @param mixed $value Valor recibido.
+ * @return string
+ */
+function kulimbos_sanitize_product_long_text_meta( $value ): string {
+	if ( ! is_scalar( $value ) ) {
+		return '';
+	}
+
+	return sanitize_textarea_field( (string) $value );
+}
+
+/**
+ * Sanitiza una lista de textos, aceptando arrays o líneas de textarea.
+ *
+ * @param mixed $value Valor recibido.
+ * @return string[]
+ */
+function kulimbos_sanitize_product_string_list_meta( $value ): array {
+	if ( is_string( $value ) ) {
+		$value = preg_split( '/\r\n|\r|\n/', $value );
+	}
+
+	if ( ! is_array( $value ) ) {
+		return array();
+	}
+
+	$items = array();
+
+	foreach ( array_slice( $value, 0, 80 ) as $item ) {
+		if ( ! is_scalar( $item ) ) {
+			continue;
+		}
+
+		$item = sanitize_text_field( (string) $item );
+
+		if ( '' !== $item ) {
+			$items[] = $item;
+		}
+	}
+
+	return array_values( array_unique( $items ) );
+}
+
+/**
+ * Decodifica un metadato estructurado cuando llega como JSON.
+ *
+ * @param mixed $value Valor recibido.
+ * @return array<int,mixed>
+ */
+function kulimbos_decode_product_structured_meta( $value ): array {
+	if ( is_string( $value ) ) {
+		$decoded = json_decode( wp_unslash( $value ), true );
+		$value   = is_array( $decoded ) ? $decoded : array();
+	}
+
+	return is_array( $value ) ? $value : array();
+}
+
+/**
+ * Sanitiza diseños disponibles.
+ *
+ * @param mixed $value Valor recibido.
+ * @return array<int,array<string,string>>
+ */
+function kulimbos_sanitize_product_designs_meta( $value ): array {
+	$items   = kulimbos_decode_product_structured_meta( $value );
+	$designs = array();
+
+	foreach ( array_slice( $items, 0, 40 ) as $item ) {
+		if ( ! is_array( $item ) ) {
+			continue;
+		}
+
+		$design = array(
+			'id'          => isset( $item['id'] ) ? sanitize_title( (string) $item['id'] ) : '',
+			'label'       => isset( $item['label'] ) ? sanitize_text_field( (string) $item['label'] ) : '',
+			'description' => isset( $item['description'] ) ? sanitize_textarea_field( (string) $item['description'] ) : '',
+			'status'      => isset( $item['status'] ) ? kulimbos_sanitize_product_status( $item['status'] ) : 'active',
+		);
+
+		if ( '' === $design['id'] && '' !== $design['label'] ) {
+			$design['id'] = sanitize_title( $design['label'] );
+		}
+
+		if ( '' !== $design['id'] && '' !== $design['label'] ) {
+			$designs[] = $design;
+		}
+	}
+
+	return $designs;
+}
+
+/**
+ * Sanitiza variantes comerciales del producto.
+ *
+ * @param mixed $value Valor recibido.
+ * @return array<int,array<string,string>>
+ */
+function kulimbos_sanitize_product_variants_meta( $value ): array {
+	$items    = kulimbos_decode_product_structured_meta( $value );
+	$variants = array();
+
+	foreach ( array_slice( $items, 0, 120 ) as $item ) {
+		if ( ! is_array( $item ) ) {
+			continue;
+		}
+
+		$variant = array(
+			'id'            => isset( $item['id'] ) ? sanitize_title( (string) $item['id'] ) : '',
+			'label'         => isset( $item['label'] ) ? sanitize_text_field( (string) $item['label'] ) : '',
+			'design'        => isset( $item['design'] ) ? sanitize_text_field( (string) $item['design'] ) : '',
+			'size'          => isset( $item['size'] ) ? sanitize_text_field( (string) $item['size'] ) : '',
+			'color'         => isset( $item['color'] ) ? sanitize_text_field( (string) $item['color'] ) : '',
+			'presentation'  => isset( $item['presentation'] ) ? sanitize_text_field( (string) $item['presentation'] ) : '',
+			'regular_price' => isset( $item['regular_price'] ) ? kulimbos_sanitize_product_integer_meta( $item['regular_price'] ) : '',
+			'sale_price'    => isset( $item['sale_price'] ) ? kulimbos_sanitize_product_integer_meta( $item['sale_price'] ) : '',
+			'stock'         => isset( $item['stock'] ) ? kulimbos_sanitize_product_integer_meta( $item['stock'] ) : '',
+			'status'        => isset( $item['status'] ) ? kulimbos_sanitize_product_status( $item['status'] ) : 'active',
+		);
+
+		if ( '' === $variant['id'] && '' !== $variant['label'] ) {
+			$variant['id'] = sanitize_title( $variant['label'] );
+		}
+
+		if ( '' !== $variant['id'] && '' !== $variant['label'] ) {
+			$variants[] = $variant;
+		}
+	}
+
+	return $variants;
+}
+
+/**
+ * Sanitiza tablas técnicas de tallas, medidas o presentaciones.
+ *
+ * @param mixed $value Valor recibido.
+ * @return array<int,array<string,mixed>>
+ */
+function kulimbos_sanitize_product_size_tables_meta( $value ): array {
+	$items  = kulimbos_decode_product_structured_meta( $value );
+	$tables = array();
+
+	foreach ( array_slice( $items, 0, 12 ) as $item ) {
+		if ( ! is_array( $item ) ) {
+			continue;
+		}
+
+		$columns = isset( $item['columns'] ) && is_array( $item['columns'] )
+			? kulimbos_sanitize_product_string_list_meta( array_slice( $item['columns'], 0, 12 ) )
+			: array();
+		$rows    = array();
+
+		if ( isset( $item['rows'] ) && is_array( $item['rows'] ) ) {
+			foreach ( array_slice( $item['rows'], 0, 80 ) as $row ) {
+				if ( ! is_array( $row ) ) {
+					continue;
+				}
+
+				$clean_row = array();
+
+				foreach ( array_slice( $row, 0, 12 ) as $cell ) {
+					$clean_row[] = is_scalar( $cell ) ? sanitize_text_field( (string) $cell ) : '';
+				}
+
+				if ( ! empty( array_filter( $clean_row ) ) ) {
+					$rows[] = $clean_row;
+				}
+			}
+		}
+
+		$table = array(
+			'title'       => isset( $item['title'] ) ? sanitize_text_field( (string) $item['title'] ) : '',
+			'source_note' => isset( $item['source_note'] ) ? sanitize_text_field( (string) $item['source_note'] ) : '',
+			'columns'     => $columns,
+			'rows'        => $rows,
+		);
+
+		if ( '' !== $table['title'] && ! empty( $table['columns'] ) && ! empty( $table['rows'] ) ) {
+			$tables[] = $table;
+		}
+	}
+
+	return $tables;
+}
+
+/**
+ * Sanitiza referencias de precios de mercado y proveedores.
+ *
+ * @param mixed $value Valor recibido.
+ * @return array<int,array<string,string>>
+ */
+function kulimbos_sanitize_product_market_prices_meta( $value ): array {
+	$items  = kulimbos_decode_product_structured_meta( $value );
+	$prices = array();
+
+	foreach ( array_slice( $items, 0, 80 ) as $item ) {
+		if ( ! is_array( $item ) ) {
+			continue;
+		}
+
+		$price = array(
+			'source'      => isset( $item['source'] ) ? sanitize_text_field( (string) $item['source'] ) : '',
+			'location'    => isset( $item['location'] ) ? sanitize_text_field( (string) $item['location'] ) : '',
+			'price_type'  => isset( $item['price_type'] ) ? sanitize_text_field( (string) $item['price_type'] ) : '',
+			'price_label' => isset( $item['price_label'] ) ? sanitize_text_field( (string) $item['price_label'] ) : '',
+			'conditions'  => isset( $item['conditions'] ) ? sanitize_textarea_field( (string) $item['conditions'] ) : '',
+			'url_or_note' => isset( $item['url_or_note'] ) ? sanitize_text_field( (string) $item['url_or_note'] ) : '',
+		);
+
+		if ( '' !== $price['source'] && '' !== $price['price_label'] ) {
+			$prices[] = $price;
+		}
+	}
+
+	return $prices;
+}
+
+/**
+ * Sanitiza estados editoriales de variantes y diseños.
+ *
+ * @param mixed $value Valor recibido.
+ * @return string
+ */
+function kulimbos_sanitize_product_status( $value ): string {
+	$status   = is_scalar( $value ) ? sanitize_key( (string) $value ) : '';
+	$allowed  = array( 'active', 'draft', 'pending', 'unavailable' );
+
+	return in_array( $status, $allowed, true ) ? $status : 'active';
+}
+
+/**
+ * Devuelve el schema REST para metadatos estructurados.
+ *
+ * @param string $meta_key Clave meta.
+ * @return array<string,mixed>
+ */
+function kulimbos_get_product_structured_meta_schema( string $meta_key ): array {
+	$text_property = array( 'type' => 'string' );
+
+	if ( 'kulimbos_product_size_tables' === $meta_key ) {
+		return array(
+			'type'  => 'array',
+			'items' => array(
+				'type'       => 'object',
+				'properties' => array(
+					'title'       => $text_property,
+					'source_note' => $text_property,
+					'columns'     => array(
+						'type'  => 'array',
+						'items' => $text_property,
+					),
+					'rows'        => array(
+						'type'  => 'array',
+						'items' => array(
+							'type'  => 'array',
+							'items' => $text_property,
+						),
+					),
+				),
+			),
+		);
+	}
+
+	if ( 'kulimbos_product_market_prices' === $meta_key ) {
+		return array(
+			'type'  => 'array',
+			'items' => array(
+				'type'       => 'object',
+				'properties' => array(
+					'source'      => $text_property,
+					'location'    => $text_property,
+					'price_type'  => $text_property,
+					'price_label' => $text_property,
+					'conditions'  => $text_property,
+					'url_or_note' => $text_property,
+				),
+			),
+		);
+	}
+
+	if ( 'kulimbos_product_designs' === $meta_key ) {
+		return array(
+			'type'  => 'array',
+			'items' => array(
+				'type'       => 'object',
+				'properties' => array(
+					'id'          => $text_property,
+					'label'       => $text_property,
+					'description' => $text_property,
+					'status'      => $text_property,
+				),
+			),
+		);
+	}
+
+	return array(
+		'type'  => 'array',
+		'items' => array(
+			'type'       => 'object',
+			'properties' => array(
+				'id'            => $text_property,
+				'label'         => $text_property,
+				'design'        => $text_property,
+				'size'          => $text_property,
+				'color'         => $text_property,
+				'presentation'  => $text_property,
+				'regular_price' => $text_property,
+				'sale_price'    => $text_property,
+				'stock'         => $text_property,
+				'status'        => $text_property,
+			),
+		),
+	);
+}
+
+/**
  * Sanitiza la lista ordenada de IDs de imágenes de galería.
  *
  * @param mixed $value Valor recibido.
@@ -287,11 +710,38 @@ function kulimbos_sanitize_product_gallery_ids( $value ): array {
 function kulimbos_add_product_data_meta_box(): void {
 	add_meta_box(
 		'kulimbos-product-data',
-		__( 'Datos del producto', 'kulimbos' ),
+		__( 'Datos comerciales', 'kulimbos' ),
 		'kulimbos_render_product_data_meta_box',
 		'producto',
 		'side',
 		'high'
+	);
+
+	add_meta_box(
+		'kulimbos-product-technical-sheet',
+		__( 'Ficha técnica del producto', 'kulimbos' ),
+		'kulimbos_render_product_technical_sheet_meta_box',
+		'producto',
+		'normal',
+		'high'
+	);
+
+	add_meta_box(
+		'kulimbos-product-content-sheet',
+		__( 'Contenido comercial y validación', 'kulimbos' ),
+		'kulimbos_render_product_content_sheet_meta_box',
+		'producto',
+		'normal',
+		'default'
+	);
+
+	add_meta_box(
+		'kulimbos-product-variants-sheet',
+		__( 'Variantes, diseños y tablas técnicas', 'kulimbos' ),
+		'kulimbos_render_product_variants_sheet_meta_box',
+		'producto',
+		'normal',
+		'default'
 	);
 
 	add_meta_box(
@@ -311,13 +761,16 @@ add_action( 'add_meta_boxes_producto', 'kulimbos_add_product_data_meta_box' );
  * @param WP_Post $post Producto actual.
  */
 function kulimbos_render_product_data_meta_box( WP_Post $post ): void {
-	$price = kulimbos_sanitize_product_integer_meta( get_post_meta( $post->ID, 'kulimbos_product_price', true ) );
-	$stock = kulimbos_sanitize_product_integer_meta( get_post_meta( $post->ID, 'kulimbos_product_stock', true ) );
+	$price         = kulimbos_sanitize_product_integer_meta( get_post_meta( $post->ID, 'kulimbos_product_price', true ) );
+	$regular_price = kulimbos_sanitize_product_integer_meta( get_post_meta( $post->ID, 'kulimbos_product_regular_price', true ) );
+	$sale_price    = kulimbos_sanitize_product_integer_meta( get_post_meta( $post->ID, 'kulimbos_product_sale_price', true ) );
+	$stock         = kulimbos_sanitize_product_integer_meta( get_post_meta( $post->ID, 'kulimbos_product_stock', true ) );
+	$sku           = sanitize_text_field( get_post_meta( $post->ID, 'kulimbos_product_sku', true ) );
 
 	wp_nonce_field( 'kulimbos_save_product_data', 'kulimbos_product_data_nonce' );
 	?>
 	<p>
-		<label for="kulimbos-product-price"><strong><?php esc_html_e( 'Precio', 'kulimbos' ); ?></strong></label>
+		<label for="kulimbos-product-price"><strong><?php esc_html_e( 'Precio base', 'kulimbos' ); ?></strong></label>
 		<input
 			type="number"
 			id="kulimbos-product-price"
@@ -328,6 +781,30 @@ function kulimbos_render_product_data_meta_box( WP_Post $post ): void {
 			class="widefat"
 			inputmode="numeric">
 		<span class="description"><?php esc_html_e( 'Valor en COP sin puntos ni símbolo. Ejemplo: 89900.', 'kulimbos' ); ?></span>
+	</p>
+	<p>
+		<label for="kulimbos-product-regular-price"><strong><?php esc_html_e( 'Precio regular', 'kulimbos' ); ?></strong></label>
+		<input
+			type="number"
+			id="kulimbos-product-regular-price"
+			name="kulimbos_product_regular_price"
+			value="<?php echo esc_attr( $regular_price ); ?>"
+			min="0"
+			step="1"
+			class="widefat"
+			inputmode="numeric">
+	</p>
+	<p>
+		<label for="kulimbos-product-sale-price"><strong><?php esc_html_e( 'Precio oferta', 'kulimbos' ); ?></strong></label>
+		<input
+			type="number"
+			id="kulimbos-product-sale-price"
+			name="kulimbos_product_sale_price"
+			value="<?php echo esc_attr( $sale_price ); ?>"
+			min="0"
+			step="1"
+			class="widefat"
+			inputmode="numeric">
 	</p>
 	<p>
 		<label for="kulimbos-product-stock"><strong><?php esc_html_e( 'Stock', 'kulimbos' ); ?></strong></label>
@@ -342,6 +819,143 @@ function kulimbos_render_product_data_meta_box( WP_Post $post ): void {
 			inputmode="numeric">
 		<span class="description"><?php esc_html_e( 'Unidades disponibles. Con 0 se mostrará como agotado.', 'kulimbos' ); ?></span>
 	</p>
+	<p>
+		<label for="kulimbos-product-sku"><strong><?php esc_html_e( 'SKU / referencia', 'kulimbos' ); ?></strong></label>
+		<input
+			type="text"
+			id="kulimbos-product-sku"
+			name="kulimbos_product_sku"
+			value="<?php echo esc_attr( $sku ); ?>"
+			class="widefat">
+	</p>
+	<?php
+}
+
+/**
+ * Renderiza la caja de ficha técnica.
+ *
+ * @param WP_Post $post Producto actual.
+ */
+function kulimbos_render_product_technical_sheet_meta_box( WP_Post $post ): void {
+	wp_nonce_field( 'kulimbos_save_product_technical_sheet', 'kulimbos_product_technical_sheet_nonce' );
+
+	$fields = array(
+		'kulimbos_product_brand'           => __( 'Marca', 'kulimbos' ),
+		'kulimbos_product_ean'             => __( 'EAN', 'kulimbos' ),
+		'kulimbos_product_invima'          => __( 'Registro INVIMA', 'kulimbos' ),
+		'kulimbos_product_presentation'    => __( 'Presentación', 'kulimbos' ),
+		'kulimbos_product_stage_age'       => __( 'Etapa / edad', 'kulimbos' ),
+		'kulimbos_product_origin'          => __( 'Origen', 'kulimbos' ),
+		'kulimbos_product_capacity'        => __( 'Capacidad', 'kulimbos' ),
+		'kulimbos_product_dimensions'      => __( 'Dimensiones', 'kulimbos' ),
+		'kulimbos_product_print_method'    => __( 'Estampado / impresión', 'kulimbos' ),
+		'kulimbos_product_material_detail' => __( 'Material técnico', 'kulimbos' ),
+	);
+	?>
+	<div class="kulimbos-product-admin-grid">
+		<?php foreach ( $fields as $meta_key => $label ) : ?>
+			<p>
+				<label for="<?php echo esc_attr( str_replace( '_', '-', $meta_key ) ); ?>"><strong><?php echo esc_html( $label ); ?></strong></label>
+				<input
+					type="text"
+					id="<?php echo esc_attr( str_replace( '_', '-', $meta_key ) ); ?>"
+					name="<?php echo esc_attr( $meta_key ); ?>"
+					value="<?php echo esc_attr( get_post_meta( $post->ID, $meta_key, true ) ); ?>"
+					class="widefat">
+			</p>
+		<?php endforeach; ?>
+	</div>
+	<?php
+}
+
+/**
+ * Renderiza la caja de contenido comercial y validación.
+ *
+ * @param WP_Post $post Producto actual.
+ */
+function kulimbos_render_product_content_sheet_meta_box( WP_Post $post ): void {
+	wp_nonce_field( 'kulimbos_save_product_content_sheet', 'kulimbos_product_content_sheet_nonce' );
+
+	$features         = kulimbos_sanitize_product_string_list_meta( get_post_meta( $post->ID, 'kulimbos_product_features', true ) );
+	$reference_images = kulimbos_sanitize_product_string_list_meta( get_post_meta( $post->ID, 'kulimbos_product_reference_images', true ) );
+	$textarea_fields  = array(
+		'kulimbos_product_care_instructions'            => __( 'Cuidados recomendados', 'kulimbos' ),
+		'kulimbos_product_personalization_instructions' => __( 'Cómo personalizar', 'kulimbos' ),
+		'kulimbos_product_usage_occasions'              => __( 'Ideas de uso / ocasiones', 'kulimbos' ),
+		'kulimbos_product_preparation_mode'             => __( 'Modo de preparación', 'kulimbos' ),
+		'kulimbos_product_warnings'                     => __( 'Advertencias importantes', 'kulimbos' ),
+		'kulimbos_product_key_ingredients'              => __( 'Ingredientes clave explicados', 'kulimbos' ),
+		'kulimbos_product_competitive_angle'            => __( 'Cómo superar a la competencia', 'kulimbos' ),
+		'kulimbos_product_verification_note'            => __( 'Nota de verificación', 'kulimbos' ),
+		'kulimbos_product_pending_verification'         => __( 'Pendientes de verificación', 'kulimbos' ),
+		'kulimbos_product_source_notes'                 => __( 'Fuentes / notas internas', 'kulimbos' ),
+	);
+	?>
+	<p>
+		<label for="kulimbos-product-features"><strong><?php esc_html_e( 'Características principales', 'kulimbos' ); ?></strong></label>
+		<textarea id="kulimbos-product-features" name="kulimbos_product_features" class="widefat" rows="5"><?php echo esc_textarea( implode( "\n", $features ) ); ?></textarea>
+		<span class="description"><?php esc_html_e( 'Una característica por línea. No se permite HTML.', 'kulimbos' ); ?></span>
+	</p>
+	<?php foreach ( $textarea_fields as $meta_key => $label ) : ?>
+		<p>
+			<label for="<?php echo esc_attr( str_replace( '_', '-', $meta_key ) ); ?>"><strong><?php echo esc_html( $label ); ?></strong></label>
+			<textarea
+				id="<?php echo esc_attr( str_replace( '_', '-', $meta_key ) ); ?>"
+				name="<?php echo esc_attr( $meta_key ); ?>"
+				class="widefat"
+				rows="4"><?php echo esc_textarea( get_post_meta( $post->ID, $meta_key, true ) ); ?></textarea>
+		</p>
+	<?php endforeach; ?>
+	<p>
+		<label for="kulimbos-product-reference-images"><strong><?php esc_html_e( 'Imágenes de referencia', 'kulimbos' ); ?></strong></label>
+		<textarea id="kulimbos-product-reference-images" name="kulimbos_product_reference_images" class="widefat" rows="4"><?php echo esc_textarea( implode( "\n", $reference_images ) ); ?></textarea>
+		<span class="description"><?php esc_html_e( 'Una nota, nombre de archivo o ruta por línea.', 'kulimbos' ); ?></span>
+	</p>
+	<?php
+}
+
+/**
+ * Renderiza la caja de variantes y tablas técnicas.
+ *
+ * @param WP_Post $post Producto actual.
+ */
+function kulimbos_render_product_variants_sheet_meta_box( WP_Post $post ): void {
+	wp_nonce_field( 'kulimbos_save_product_variants_sheet', 'kulimbos_product_variants_sheet_nonce' );
+
+	$fields = array(
+		'kulimbos_product_designs'       => array(
+			'label'       => __( 'Diseños disponibles', 'kulimbos' ),
+			'description' => __( 'JSON con id, label, description y status.', 'kulimbos' ),
+			'value'       => kulimbos_sanitize_product_designs_meta( get_post_meta( $post->ID, 'kulimbos_product_designs', true ) ),
+		),
+		'kulimbos_product_variants'      => array(
+			'label'       => __( 'Variantes comerciales', 'kulimbos' ),
+			'description' => __( 'JSON con id, label, design, size, color, presentation, regular_price, sale_price, stock y status.', 'kulimbos' ),
+			'value'       => kulimbos_sanitize_product_variants_meta( get_post_meta( $post->ID, 'kulimbos_product_variants', true ) ),
+		),
+		'kulimbos_product_size_tables'   => array(
+			'label'       => __( 'Tablas técnicas / tallas', 'kulimbos' ),
+			'description' => __( 'JSON con title, source_note, columns y rows.', 'kulimbos' ),
+			'value'       => kulimbos_sanitize_product_size_tables_meta( get_post_meta( $post->ID, 'kulimbos_product_size_tables', true ) ),
+		),
+		'kulimbos_product_market_prices' => array(
+			'label'       => __( 'Precios de referencia / proveedores', 'kulimbos' ),
+			'description' => __( 'JSON con source, location, price_type, price_label, conditions y url_or_note.', 'kulimbos' ),
+			'value'       => kulimbos_sanitize_product_market_prices_meta( get_post_meta( $post->ID, 'kulimbos_product_market_prices', true ) ),
+		),
+	);
+	?>
+	<?php foreach ( $fields as $meta_key => $field ) : ?>
+		<p>
+			<label for="<?php echo esc_attr( str_replace( '_', '-', $meta_key ) ); ?>"><strong><?php echo esc_html( $field['label'] ); ?></strong></label>
+			<textarea
+				id="<?php echo esc_attr( str_replace( '_', '-', $meta_key ) ); ?>"
+				name="<?php echo esc_attr( $meta_key ); ?>"
+				class="widefat code"
+				rows="8"><?php echo esc_textarea( wp_json_encode( $field['value'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) ); ?></textarea>
+			<span class="description"><?php echo esc_html( $field['description'] ); ?></span>
+		</p>
+	<?php endforeach; ?>
 	<?php
 }
 
@@ -486,6 +1100,9 @@ function kulimbos_save_product_data_meta_box( int $post_id ): void {
 	$fields = array(
 		'kulimbos_product_price',
 		'kulimbos_product_stock',
+		'kulimbos_product_regular_price',
+		'kulimbos_product_sale_price',
+		'kulimbos_product_sku',
 	);
 
 	foreach ( $fields as $field ) {
@@ -494,11 +1111,169 @@ function kulimbos_save_product_data_meta_box( int $post_id ): void {
 			continue;
 		}
 
-		$value = kulimbos_sanitize_product_integer_meta( wp_unslash( $_POST[ $field ] ) );
+		$value = 'kulimbos_product_sku' === $field
+			? sanitize_text_field( wp_unslash( $_POST[ $field ] ) )
+			: kulimbos_sanitize_product_integer_meta( wp_unslash( $_POST[ $field ] ) );
+
+		if ( '' === $value ) {
+			delete_post_meta( $post_id, $field );
+			continue;
+		}
+
 		update_post_meta( $post_id, $field, $value );
 	}
 }
 add_action( 'save_post_producto', 'kulimbos_save_product_data_meta_box' );
+
+/**
+ * Guarda la ficha técnica administrativa del producto.
+ *
+ * @param int $post_id ID del producto.
+ */
+function kulimbos_save_product_technical_sheet_meta_box( int $post_id ): void {
+	if ( ! kulimbos_can_save_product_meta_box( $post_id, 'kulimbos_product_technical_sheet_nonce', 'kulimbos_save_product_technical_sheet' ) ) {
+		return;
+	}
+
+	$fields = array(
+		'kulimbos_product_brand',
+		'kulimbos_product_ean',
+		'kulimbos_product_invima',
+		'kulimbos_product_presentation',
+		'kulimbos_product_stage_age',
+		'kulimbos_product_origin',
+		'kulimbos_product_capacity',
+		'kulimbos_product_dimensions',
+		'kulimbos_product_print_method',
+		'kulimbos_product_material_detail',
+	);
+
+	kulimbos_save_product_text_fields( $post_id, $fields, 'sanitize_text_field' );
+}
+add_action( 'save_post_producto', 'kulimbos_save_product_technical_sheet_meta_box' );
+
+/**
+ * Guarda contenido comercial, advertencias y notas editoriales del producto.
+ *
+ * @param int $post_id ID del producto.
+ */
+function kulimbos_save_product_content_sheet_meta_box( int $post_id ): void {
+	if ( ! kulimbos_can_save_product_meta_box( $post_id, 'kulimbos_product_content_sheet_nonce', 'kulimbos_save_product_content_sheet' ) ) {
+		return;
+	}
+
+	$list_fields = array(
+		'kulimbos_product_features',
+		'kulimbos_product_reference_images',
+	);
+
+	foreach ( $list_fields as $field ) {
+		$value = isset( $_POST[ $field ] )
+			? kulimbos_sanitize_product_string_list_meta( wp_unslash( $_POST[ $field ] ) )
+			: array();
+
+		if ( empty( $value ) ) {
+			delete_post_meta( $post_id, $field );
+			continue;
+		}
+
+		update_post_meta( $post_id, $field, $value );
+	}
+
+	$textarea_fields = array(
+		'kulimbos_product_care_instructions',
+		'kulimbos_product_personalization_instructions',
+		'kulimbos_product_usage_occasions',
+		'kulimbos_product_preparation_mode',
+		'kulimbos_product_warnings',
+		'kulimbos_product_key_ingredients',
+		'kulimbos_product_competitive_angle',
+		'kulimbos_product_verification_note',
+		'kulimbos_product_pending_verification',
+		'kulimbos_product_source_notes',
+	);
+
+	kulimbos_save_product_text_fields( $post_id, $textarea_fields, 'kulimbos_sanitize_product_long_text_meta' );
+}
+add_action( 'save_post_producto', 'kulimbos_save_product_content_sheet_meta_box' );
+
+/**
+ * Guarda estructuras JSON de variantes, diseños y tablas técnicas.
+ *
+ * @param int $post_id ID del producto.
+ */
+function kulimbos_save_product_variants_sheet_meta_box( int $post_id ): void {
+	if ( ! kulimbos_can_save_product_meta_box( $post_id, 'kulimbos_product_variants_sheet_nonce', 'kulimbos_save_product_variants_sheet' ) ) {
+		return;
+	}
+
+	$fields = array(
+		'kulimbos_product_designs'       => 'kulimbos_sanitize_product_designs_meta',
+		'kulimbos_product_variants'      => 'kulimbos_sanitize_product_variants_meta',
+		'kulimbos_product_size_tables'   => 'kulimbos_sanitize_product_size_tables_meta',
+		'kulimbos_product_market_prices' => 'kulimbos_sanitize_product_market_prices_meta',
+	);
+
+	foreach ( $fields as $field => $sanitize_callback ) {
+		$value = isset( $_POST[ $field ] )
+			? call_user_func( $sanitize_callback, wp_unslash( $_POST[ $field ] ) )
+			: array();
+
+		if ( empty( $value ) ) {
+			delete_post_meta( $post_id, $field );
+			continue;
+		}
+
+		update_post_meta( $post_id, $field, $value );
+	}
+}
+add_action( 'save_post_producto', 'kulimbos_save_product_variants_sheet_meta_box' );
+
+/**
+ * Valida si un metabox de producto puede guardarse.
+ *
+ * @param int    $post_id      ID del producto.
+ * @param string $nonce_field  Campo nonce.
+ * @param string $nonce_action Acción nonce.
+ * @return bool
+ */
+function kulimbos_can_save_product_meta_box( int $post_id, string $nonce_field, string $nonce_action ): bool {
+	if ( ! isset( $_POST[ $nonce_field ] ) ) {
+		return false;
+	}
+
+	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ $nonce_field ] ) ), $nonce_action ) ) {
+		return false;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return false;
+	}
+
+	return current_user_can( 'edit_post', $post_id );
+}
+
+/**
+ * Guarda campos de texto de producto eliminando metadatos vacíos.
+ *
+ * @param int      $post_id           ID del producto.
+ * @param string[] $fields            Claves meta.
+ * @param callable $sanitize_callback Callback de sanitización.
+ */
+function kulimbos_save_product_text_fields( int $post_id, array $fields, callable $sanitize_callback ): void {
+	foreach ( $fields as $field ) {
+		$value = isset( $_POST[ $field ] )
+			? call_user_func( $sanitize_callback, wp_unslash( $_POST[ $field ] ) )
+			: '';
+
+		if ( '' === $value ) {
+			delete_post_meta( $post_id, $field );
+			continue;
+		}
+
+		update_post_meta( $post_id, $field, $value );
+	}
+}
 
 /**
  * Guarda la galería administrativa del producto.
@@ -715,7 +1490,7 @@ add_action( 'init', 'kulimbos_register_product_rewrite_rules', 3 );
  * Refresca reglas una sola vez cuando cambia la versión de rewrites del catálogo.
  */
 function kulimbos_maybe_flush_product_rewrites(): void {
-	$rewrite_version = 'producto-catalogo-v2';
+	$rewrite_version = 'producto-catalogo-v3';
 
 	if ( get_option( 'kulimbos_product_rewrite_version' ) === $rewrite_version ) {
 		return;
@@ -727,7 +1502,7 @@ function kulimbos_maybe_flush_product_rewrites(): void {
 add_action( 'init', 'kulimbos_maybe_flush_product_rewrites', 20 );
 
 /**
- * Crea términos y productos base para que las rutas del catálogo existan.
+ * Crea términos base para que el catálogo pueda clasificarse desde el administrador.
  *
  * Solo corre una vez y únicamente para usuarios con permisos de administración,
  * evitando crear contenido durante visitas anónimas.
@@ -737,8 +1512,7 @@ function kulimbos_maybe_seed_catalog_content(): void {
 		return;
 	}
 
-	$term_ids = kulimbos_seed_product_terms();
-	kulimbos_seed_product_samples( $term_ids );
+	kulimbos_seed_product_terms();
 
 	update_option( 'kulimbos_catalog_seed_version', 'v1', false );
 }
@@ -748,7 +1522,7 @@ add_action( 'init', 'kulimbos_maybe_seed_catalog_content', 30 );
  * Crea términos base para filtros administrables del catálogo.
  */
 function kulimbos_maybe_seed_product_filter_terms(): void {
-	if ( get_option( 'kulimbos_product_filter_terms_version' ) === 'v1' || ! current_user_can( 'manage_options' ) ) {
+	if ( get_option( 'kulimbos_product_filter_terms_version' ) === 'v2' || ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
 
@@ -792,6 +1566,20 @@ function kulimbos_maybe_seed_product_filter_terms(): void {
 			'felpa'          => __( 'Felpa suave', 'kulimbos' ),
 			'hipoalergenico' => __( 'Hipoalergénico', 'kulimbos' ),
 		),
+		'marca_producto'    => array(
+			'nestle'    => __( 'Nestlé', 'kulimbos' ),
+			'abbott'    => __( 'Abbott', 'kulimbos' ),
+			'enfamil'   => __( 'Enfamil / Enfagrow', 'kulimbos' ),
+			'kulimbos'  => __( 'Kulimbos', 'kulimbos' ),
+		),
+		'tipo_producto'     => array(
+			'formula-infantil'       => __( 'Fórmula infantil', 'kulimbos' ),
+			'alimento-lacteo'        => __( 'Alimento lácteo', 'kulimbos' ),
+			'nutricion-medica'       => __( 'Nutrición médica', 'kulimbos' ),
+			'ropa-personalizada'     => __( 'Ropa personalizada', 'kulimbos' ),
+			'accesorio-personalizado' => __( 'Accesorio personalizado', 'kulimbos' ),
+			'cobija-personalizada'   => __( 'Cobija personalizada', 'kulimbos' ),
+		),
 	);
 
 	foreach ( $filter_terms as $taxonomy => $terms ) {
@@ -815,7 +1603,7 @@ function kulimbos_maybe_seed_product_filter_terms(): void {
 		}
 	}
 
-	update_option( 'kulimbos_product_filter_terms_version', 'v1', false );
+	update_option( 'kulimbos_product_filter_terms_version', 'v2', false );
 }
 add_action( 'init', 'kulimbos_maybe_seed_product_filter_terms', 29 );
 
@@ -875,76 +1663,6 @@ function kulimbos_seed_product_terms(): array {
 	}
 
 	return $term_ids;
-}
-
-/**
- * Crea productos de ejemplo relacionados con las categorías base.
- *
- * @param array<string,int> $term_ids IDs de términos creados o existentes.
- */
-function kulimbos_seed_product_samples( array $term_ids ): void {
-	$samples = array(
-		array(
-			'title'    => __( 'Oso de peluche', 'kulimbos' ),
-			'slug'     => 'oso-de-peluche',
-			'term'     => $term_ids['peluches'] ?? 0,
-			'price'    => '79900',
-			'stock'    => '10',
-			'excerpt'  => __( 'Suave, tierno y perfecto para abrazar.', 'kulimbos' ),
-			'age'      => '0-1',
-			'size'     => 'mediano',
-			'color'    => 'cafe',
-			'material' => 'felpa',
-		),
-		array(
-			'title'    => __( 'Coche de bebé', 'kulimbos' ),
-			'slug'     => 'coche-de-bebe',
-			'term'     => $term_ids['paseo'] ?? 0,
-			'price'    => '349900',
-			'stock'    => '6',
-			'excerpt'  => __( 'Coche práctico para paseos cómodos y seguros.', 'kulimbos' ),
-			'age'      => '0-1',
-			'size'     => 'grande',
-			'color'    => 'gris',
-			'material' => 'hipoalergenico',
-		),
-	);
-
-	foreach ( $samples as $sample ) {
-		if ( empty( $sample['term'] ) || get_page_by_path( $sample['slug'], OBJECT, 'producto' ) ) {
-			continue;
-		}
-
-		$product_id = wp_insert_post(
-			array(
-				'post_type'    => 'producto',
-				'post_status'  => 'publish',
-				'post_title'   => $sample['title'],
-				'post_name'    => $sample['slug'],
-				'post_excerpt' => $sample['excerpt'],
-				'post_content' => $sample['excerpt'],
-			),
-			true
-		);
-
-		if ( is_wp_error( $product_id ) ) {
-			continue;
-		}
-
-		wp_set_object_terms( $product_id, array( (int) $sample['term'] ), 'categoria_producto' );
-		wp_set_object_terms( $product_id, array( $sample['age'] ), 'edad_producto' );
-		wp_set_object_terms( $product_id, array( $sample['size'] ), 'tamano_producto' );
-		wp_set_object_terms( $product_id, array( $sample['color'] ), 'color_producto' );
-		wp_set_object_terms( $product_id, array( $sample['material'] ), 'material_producto' );
-		update_post_meta( $product_id, 'kulimbos_product_price', $sample['price'] );
-		update_post_meta( $product_id, 'kulimbos_product_stock', $sample['stock'] );
-		update_post_meta( $product_id, 'kulimbos_product_rating', '5' );
-		update_post_meta( $product_id, 'kulimbos_product_reviews', '0' );
-		update_post_meta( $product_id, 'kulimbos_product_age', $sample['age'] );
-		update_post_meta( $product_id, 'kulimbos_product_size', $sample['size'] );
-		update_post_meta( $product_id, 'kulimbos_product_color', $sample['color'] );
-		update_post_meta( $product_id, 'kulimbos_product_material', $sample['material'] );
-	}
 }
 
 /**
@@ -1063,6 +1781,187 @@ function kulimbos_get_product_filter_slug( int $post_id, string $taxonomy, strin
  */
 function kulimbos_get_product_stock( int $post_id ): int {
 	return (int) kulimbos_sanitize_product_integer_meta( get_post_meta( $post_id, 'kulimbos_product_stock', true ) );
+}
+
+/**
+ * Devuelve datos de precio del producto conservando el precio base heredado.
+ *
+ * @param int $post_id ID del producto.
+ * @return array{base:int,regular:int,sale:int,effective:int,from:int,has_price:bool,has_sale:bool,label:string}
+ */
+function kulimbos_get_product_price_data( int $post_id ): array {
+	$base_price    = (int) kulimbos_sanitize_product_integer_meta( get_post_meta( $post_id, 'kulimbos_product_price', true ) );
+	$regular_price = (int) kulimbos_sanitize_product_integer_meta( get_post_meta( $post_id, 'kulimbos_product_regular_price', true ) );
+	$sale_price    = (int) kulimbos_sanitize_product_integer_meta( get_post_meta( $post_id, 'kulimbos_product_sale_price', true ) );
+	$variants      = kulimbos_get_product_variants( $post_id );
+	$variant_prices = array();
+
+	foreach ( $variants as $variant ) {
+		if ( 'active' !== $variant['status'] ) {
+			continue;
+		}
+
+		$variant_price = ! empty( $variant['sale_price'] ) ? (int) $variant['sale_price'] : (int) $variant['regular_price'];
+
+		if ( $variant_price > 0 ) {
+			$variant_prices[] = $variant_price;
+		}
+	}
+
+	$from_price = ! empty( $variant_prices ) ? min( $variant_prices ) : 0;
+	$effective  = $sale_price > 0 ? $sale_price : $base_price;
+
+	if ( 0 === $effective && $regular_price > 0 ) {
+		$effective = $regular_price;
+	}
+
+	if ( 0 === $effective && $from_price > 0 ) {
+		$effective = $from_price;
+	}
+
+	$label = $effective > 0 ? '$' . number_format( $effective, 0, ',', '.' ) : __( 'Consultar precio', 'kulimbos' );
+
+	if ( $from_price > 0 && ( 0 === $base_price || $from_price < $effective ) ) {
+		$label = sprintf(
+			/* translators: %s: formatted product price. */
+			__( 'Desde %s', 'kulimbos' ),
+			'$' . number_format( $from_price, 0, ',', '.' )
+		);
+	}
+
+	return array(
+		'base'      => $base_price,
+		'regular'   => $regular_price,
+		'sale'      => $sale_price,
+		'effective' => $effective,
+		'from'      => $from_price,
+		'has_price' => $effective > 0 || $from_price > 0,
+		'has_sale'  => $sale_price > 0 && ( 0 === $regular_price || $sale_price < $regular_price ),
+		'label'     => $label,
+	);
+}
+
+/**
+ * Devuelve los datos principales de ficha técnica listos para render.
+ *
+ * @param int $post_id ID del producto.
+ * @return array<int,array{label:string,value:string}>
+ */
+function kulimbos_get_product_technical_sheet( int $post_id ): array {
+	$fields = array(
+		'kulimbos_product_brand'           => __( 'Marca', 'kulimbos' ),
+		'kulimbos_product_presentation'    => __( 'Presentación', 'kulimbos' ),
+		'kulimbos_product_stage_age'       => __( 'Etapa / edad', 'kulimbos' ),
+		'kulimbos_product_material_detail' => __( 'Material', 'kulimbos' ),
+		'kulimbos_product_print_method'    => __( 'Estampado / impresión', 'kulimbos' ),
+		'kulimbos_product_capacity'        => __( 'Capacidad', 'kulimbos' ),
+		'kulimbos_product_dimensions'      => __( 'Dimensiones', 'kulimbos' ),
+		'kulimbos_product_origin'          => __( 'Origen', 'kulimbos' ),
+		'kulimbos_product_ean'             => __( 'EAN', 'kulimbos' ),
+		'kulimbos_product_invima'          => __( 'Registro INVIMA', 'kulimbos' ),
+	);
+	$sheet  = array();
+
+	foreach ( $fields as $meta_key => $label ) {
+		$value = sanitize_text_field( get_post_meta( $post_id, $meta_key, true ) );
+
+		if ( '' !== $value ) {
+			$sheet[] = array(
+				'label' => $label,
+				'value' => $value,
+			);
+		}
+	}
+
+	return $sheet;
+}
+
+/**
+ * Devuelve las características principales de producto.
+ *
+ * @param int $post_id ID del producto.
+ * @return string[]
+ */
+function kulimbos_get_product_features( int $post_id ): array {
+	return kulimbos_sanitize_product_string_list_meta( get_post_meta( $post_id, 'kulimbos_product_features', true ) );
+}
+
+/**
+ * Devuelve diseños disponibles.
+ *
+ * @param int $post_id ID del producto.
+ * @return array<int,array<string,string>>
+ */
+function kulimbos_get_product_designs( int $post_id ): array {
+	return kulimbos_sanitize_product_designs_meta( get_post_meta( $post_id, 'kulimbos_product_designs', true ) );
+}
+
+/**
+ * Devuelve variantes comerciales.
+ *
+ * @param int $post_id ID del producto.
+ * @return array<int,array<string,string>>
+ */
+function kulimbos_get_product_variants( int $post_id ): array {
+	return kulimbos_sanitize_product_variants_meta( get_post_meta( $post_id, 'kulimbos_product_variants', true ) );
+}
+
+/**
+ * Devuelve tablas técnicas.
+ *
+ * @param int $post_id ID del producto.
+ * @return array<int,array<string,mixed>>
+ */
+function kulimbos_get_product_size_tables( int $post_id ): array {
+	return kulimbos_sanitize_product_size_tables_meta( get_post_meta( $post_id, 'kulimbos_product_size_tables', true ) );
+}
+
+/**
+ * Devuelve precios de mercado y proveedores.
+ *
+ * @param int $post_id ID del producto.
+ * @return array<int,array<string,string>>
+ */
+function kulimbos_get_product_market_prices( int $post_id ): array {
+	return kulimbos_sanitize_product_market_prices_meta( get_post_meta( $post_id, 'kulimbos_product_market_prices', true ) );
+}
+
+/**
+ * Devuelve un campo público de texto largo del producto.
+ *
+ * @param int    $post_id  ID del producto.
+ * @param string $meta_key Clave meta.
+ * @return string
+ */
+function kulimbos_get_product_long_text( int $post_id, string $meta_key ): string {
+	$allowed = array(
+		'kulimbos_product_care_instructions',
+		'kulimbos_product_personalization_instructions',
+		'kulimbos_product_usage_occasions',
+		'kulimbos_product_preparation_mode',
+		'kulimbos_product_warnings',
+		'kulimbos_product_key_ingredients',
+		'kulimbos_product_competitive_angle',
+		'kulimbos_product_verification_note',
+		'kulimbos_product_pending_verification',
+		'kulimbos_product_source_notes',
+	);
+
+	if ( ! in_array( $meta_key, $allowed, true ) ) {
+		return '';
+	}
+
+	return kulimbos_sanitize_product_long_text_meta( get_post_meta( $post_id, $meta_key, true ) );
+}
+
+/**
+ * Indica si un producto tiene datos pendientes de verificación.
+ *
+ * @param int $post_id ID del producto.
+ * @return bool
+ */
+function kulimbos_product_has_pending_verification( int $post_id ): bool {
+	return '' !== kulimbos_get_product_long_text( $post_id, 'kulimbos_product_pending_verification' );
 }
 
 /**

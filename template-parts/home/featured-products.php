@@ -30,8 +30,14 @@ if ($products_query->have_posts()) {
 
 		$product_id             = get_the_ID();
 		$product_name           = get_the_title();
-		$product_price          = get_post_meta($product_id, 'kulimbos_product_price', true);
-		$product_has_price      = '' !== $product_price;
+		$product_price          = function_exists('kulimbos_get_product_price_data')
+			? kulimbos_get_product_price_data($product_id)
+			: array(
+				'effective' => (int) preg_replace('/[^\d]/', '', (string) get_post_meta($product_id, 'kulimbos_product_price', true)),
+				'label'     => get_post_meta($product_id, 'kulimbos_product_price', true) ? '$' . number_format((int) preg_replace('/[^\d]/', '', (string) get_post_meta($product_id, 'kulimbos_product_price', true)), 0, ',', '.') : __('Consultar precio', 'kulimbos'),
+				'has_price' => '' !== get_post_meta($product_id, 'kulimbos_product_price', true),
+			);
+		$product_has_price      = (bool) $product_price['has_price'];
 		$product_stock          = function_exists('kulimbos_get_product_stock') ? kulimbos_get_product_stock($product_id) : (int) get_post_meta($product_id, 'kulimbos_product_stock', true);
 		$product_review_summary = function_exists('kulimbos_get_product_review_summary')
 			? kulimbos_get_product_review_summary($product_id)
@@ -47,7 +53,8 @@ if ($products_query->have_posts()) {
 			'name'      => $product_name,
 			'rating'    => (float) $product_review_summary['rating'],
 			'reviews'   => (int) $product_review_summary['reviews'],
-			'price'     => $product_has_price ? (int) preg_replace('/[^\d]/', '', (string) $product_price) : 0,
+			'price'     => (int) $product_price['effective'],
+			'price_label' => $product_price['label'],
 			'has_price' => $product_has_price,
 			'stock'     => $product_stock,
 			'url'       => get_permalink(),
@@ -57,9 +64,6 @@ if ($products_query->have_posts()) {
 	wp_reset_postdata();
 }
 
-if (empty($products)) {
-	return;
-}
 ?>
 
 <section class="home-section featured-products" aria-labelledby="featured-products-title">
@@ -75,8 +79,11 @@ if (empty($products)) {
 			</a>
 		</div>
 
-		<ul class="product-grid" role="list">
-			<?php foreach ($products as $product) : ?>
+		<?php if (empty($products)) : ?>
+			<p class="featured-products__empty"><?php esc_html_e('Aún no hay productos publicados. Cuando cargues productos en WordPress aparecerán aquí automáticamente.', 'kulimbos'); ?></p>
+		<?php else : ?>
+			<ul class="product-grid" role="list">
+				<?php foreach ($products as $product) : ?>
 				<li class="product-card">
 
 					<div class="product-card__image-wrap">
@@ -134,7 +141,7 @@ if (empty($products)) {
 							<span class="product-card__price">
 								<?php
 								echo $product['has_price']
-									? esc_html('$' . number_format($product['price'], 0, ',', '.'))
+									? esc_html($product['price_label'])
 									: esc_html__('Consultar precio', 'kulimbos');
 								?>
 							</span>
@@ -155,8 +162,9 @@ if (empty($products)) {
 					</div>
 
 				</li>
-			<?php endforeach; ?>
-		</ul>
+				<?php endforeach; ?>
+			</ul>
+		<?php endif; ?>
 
 	</div>
 </section>
