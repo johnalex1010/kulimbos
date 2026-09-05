@@ -15,7 +15,7 @@ $main_product       = array();
 $product_categories = array();
 
 if (! is_singular('producto')) {
-	?>
+?>
 	<section class="product-detail-page" aria-labelledby="product-empty-title">
 		<div class="container">
 			<div class="product-detail-empty">
@@ -27,7 +27,7 @@ if (! is_singular('producto')) {
 			</div>
 		</div>
 	</section>
-	<?php
+<?php
 	return;
 }
 
@@ -323,7 +323,7 @@ $whatsapp_message = sprintf(
 	$product_url,
 	$quantity_value
 );
-$whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
+$whatsapp_url = 'https://api.whatsapp.com/send?phone=573144681188&text=' . rawurlencode($whatsapp_message);
 ?>
 
 <section class="product-detail-page" aria-labelledby="product-detail-title">
@@ -538,275 +538,275 @@ $whatsapp_url = 'https://wa.me/?text=' . rawurlencode($whatsapp_message);
 </section>
 
 <?php if (! empty($product_sheet_data['technical']) || ! empty($product_sheet_data['features']) || ! empty($product_sheet_data['designs']) || ! empty($product_sheet_data['variants']) || ! empty($product_sheet_data['size_tables']) || ! empty($product_sheet_data['content_blocks']) || ! empty($product_sheet_data['pending_warning'])) : ?>
-<section class="product-technical-sheet" aria-labelledby="product-technical-sheet-title">
-	<div class="container">
-		<h2 class="product-section-title" id="product-technical-sheet-title"><?php esc_html_e('Ficha técnica', 'kulimbos'); ?></h2>
+	<section class="product-technical-sheet" aria-labelledby="product-technical-sheet-title">
+		<div class="container">
+			<h2 class="product-section-title" id="product-technical-sheet-title"><?php esc_html_e('Ficha técnica', 'kulimbos'); ?></h2>
 
-		<?php if (! empty($product_sheet_data['pending_warning'])) : ?>
-			<div class="product-technical-sheet__notice" role="note">
-				<strong><?php esc_html_e('Pendiente de verificación', 'kulimbos'); ?></strong>
-				<?php echo wp_kses_post(wpautop(esc_html($product_sheet_data['pending_warning']))); ?>
+			<?php if (! empty($product_sheet_data['pending_warning'])) : ?>
+				<div class="product-technical-sheet__notice" role="note">
+					<strong><?php esc_html_e('Pendiente de verificación', 'kulimbos'); ?></strong>
+					<?php echo wp_kses_post(wpautop(esc_html($product_sheet_data['pending_warning']))); ?>
+				</div>
+			<?php endif; ?>
+
+			<div class="product-technical-sheet__grid">
+				<?php if (! empty($product_sheet_data['technical'])) : ?>
+					<section class="product-spec-panel" aria-labelledby="product-specs-title">
+						<h3 id="product-specs-title"><?php esc_html_e('Datos principales', 'kulimbos'); ?></h3>
+						<dl class="product-spec-list">
+							<?php foreach ($product_sheet_data['technical'] as $item) : ?>
+								<div>
+									<dt><?php echo esc_html($item['label']); ?></dt>
+									<dd><?php echo esc_html($item['value']); ?></dd>
+								</div>
+							<?php endforeach; ?>
+						</dl>
+					</section>
+				<?php endif; ?>
+
+				<?php if (! empty($product_sheet_data['features'])) : ?>
+					<section class="product-spec-panel" aria-labelledby="product-features-title">
+						<h3 id="product-features-title"><?php esc_html_e('Características principales', 'kulimbos'); ?></h3>
+						<ul class="product-spec-bullets" role="list">
+							<?php foreach ($product_sheet_data['features'] as $feature) : ?>
+								<li><?php echo esc_html($feature); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					</section>
+				<?php endif; ?>
 			</div>
-		<?php endif; ?>
 
-		<div class="product-technical-sheet__grid">
-			<?php if (! empty($product_sheet_data['technical'])) : ?>
-				<section class="product-spec-panel" aria-labelledby="product-specs-title">
-					<h3 id="product-specs-title"><?php esc_html_e('Datos principales', 'kulimbos'); ?></h3>
-					<dl class="product-spec-list">
-						<?php foreach ($product_sheet_data['technical'] as $item) : ?>
-							<div>
-								<dt><?php echo esc_html($item['label']); ?></dt>
-								<dd><?php echo esc_html($item['value']); ?></dd>
-							</div>
-						<?php endforeach; ?>
-					</dl>
+			<?php if (! empty($product_sheet_data['designs']) || ! empty($product_sheet_data['variants'])) : ?>
+				<section class="product-options-sheet" aria-labelledby="product-options-title">
+					<h3 id="product-options-title"><?php esc_html_e('Diseños y variantes', 'kulimbos'); ?></h3>
+
+					<?php if (! empty($product_sheet_data['designs'])) : ?>
+						<ul class="product-design-list" role="list">
+							<?php foreach ($product_sheet_data['designs'] as $design) : ?>
+								<li>
+									<strong><?php echo esc_html($design['label']); ?></strong>
+									<?php if (! empty($design['description'])) : ?>
+										<span><?php echo esc_html($design['description']); ?></span>
+									<?php endif; ?>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+
+					<?php if (! empty($product_sheet_data['variants'])) : ?>
+						<div class="product-table-wrap">
+							<table class="product-data-table">
+								<thead>
+									<tr>
+										<th scope="col"><?php esc_html_e('Variante', 'kulimbos'); ?></th>
+										<th scope="col"><?php esc_html_e('Diseño', 'kulimbos'); ?></th>
+										<th scope="col"><?php esc_html_e('Tamaño', 'kulimbos'); ?></th>
+										<th scope="col"><?php esc_html_e('Color', 'kulimbos'); ?></th>
+										<th scope="col"><?php esc_html_e('Precio', 'kulimbos'); ?></th>
+										<th scope="col"><?php esc_html_e('Estado', 'kulimbos'); ?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ($product_sheet_data['variants'] as $variant) : ?>
+										<?php
+										$variant_price = ! empty($variant['sale_price']) ? (int) $variant['sale_price'] : (int) $variant['regular_price'];
+										?>
+										<tr>
+											<th scope="row"><?php echo esc_html($variant['label']); ?></th>
+											<td><?php echo esc_html($variant['design']); ?></td>
+											<td><?php echo esc_html($variant['size']); ?></td>
+											<td><?php echo esc_html($variant['color']); ?></td>
+											<td><?php echo $variant_price > 0 ? esc_html('$' . number_format($variant_price, 0, ',', '.')) : esc_html__('Por definir', 'kulimbos'); ?></td>
+											<td><?php echo esc_html($product_status_labels[$variant['status']] ?? $variant['status']); ?></td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						</div>
+					<?php endif; ?>
 				</section>
 			<?php endif; ?>
 
-			<?php if (! empty($product_sheet_data['features'])) : ?>
-				<section class="product-spec-panel" aria-labelledby="product-features-title">
-					<h3 id="product-features-title"><?php esc_html_e('Características principales', 'kulimbos'); ?></h3>
-					<ul class="product-spec-bullets" role="list">
-						<?php foreach ($product_sheet_data['features'] as $feature) : ?>
-							<li><?php echo esc_html($feature); ?></li>
-						<?php endforeach; ?>
-					</ul>
+			<?php if (! empty($product_sheet_data['content_blocks'])) : ?>
+				<div class="product-content-sheet">
+					<?php foreach ($product_sheet_data['content_blocks'] as $block) : ?>
+						<section class="product-spec-panel">
+							<h3><?php echo esc_html($block['title']); ?></h3>
+							<?php echo wp_kses_post(wpautop(esc_html($block['content']))); ?>
+						</section>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+
+			<?php if (! empty($product_sheet_data['size_tables'])) : ?>
+				<section class="product-size-tables" aria-labelledby="product-size-tables-title">
+					<h3 id="product-size-tables-title"><?php esc_html_e('Tablas técnicas', 'kulimbos'); ?></h3>
+					<?php foreach ($product_sheet_data['size_tables'] as $table) : ?>
+						<div class="product-table-wrap">
+							<h4><?php echo esc_html($table['title']); ?></h4>
+							<table class="product-data-table">
+								<thead>
+									<tr>
+										<?php foreach ($table['columns'] as $column) : ?>
+											<th scope="col"><?php echo esc_html($column); ?></th>
+										<?php endforeach; ?>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ($table['rows'] as $row) : ?>
+										<tr>
+											<?php foreach ($row as $index => $cell) : ?>
+												<?php if (0 === $index) : ?>
+													<th scope="row"><?php echo esc_html($cell); ?></th>
+												<?php else : ?>
+													<td><?php echo esc_html($cell); ?></td>
+												<?php endif; ?>
+											<?php endforeach; ?>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+							<?php if (! empty($table['source_note'])) : ?>
+								<p class="product-table-wrap__note"><?php echo esc_html($table['source_note']); ?></p>
+							<?php endif; ?>
+						</div>
+					<?php endforeach; ?>
 				</section>
 			<?php endif; ?>
 		</div>
-
-		<?php if (! empty($product_sheet_data['designs']) || ! empty($product_sheet_data['variants'])) : ?>
-			<section class="product-options-sheet" aria-labelledby="product-options-title">
-				<h3 id="product-options-title"><?php esc_html_e('Diseños y variantes', 'kulimbos'); ?></h3>
-
-				<?php if (! empty($product_sheet_data['designs'])) : ?>
-					<ul class="product-design-list" role="list">
-						<?php foreach ($product_sheet_data['designs'] as $design) : ?>
-							<li>
-								<strong><?php echo esc_html($design['label']); ?></strong>
-								<?php if (! empty($design['description'])) : ?>
-									<span><?php echo esc_html($design['description']); ?></span>
-								<?php endif; ?>
-							</li>
-						<?php endforeach; ?>
-					</ul>
-				<?php endif; ?>
-
-				<?php if (! empty($product_sheet_data['variants'])) : ?>
-					<div class="product-table-wrap">
-						<table class="product-data-table">
-							<thead>
-								<tr>
-									<th scope="col"><?php esc_html_e('Variante', 'kulimbos'); ?></th>
-									<th scope="col"><?php esc_html_e('Diseño', 'kulimbos'); ?></th>
-									<th scope="col"><?php esc_html_e('Tamaño', 'kulimbos'); ?></th>
-									<th scope="col"><?php esc_html_e('Color', 'kulimbos'); ?></th>
-									<th scope="col"><?php esc_html_e('Precio', 'kulimbos'); ?></th>
-									<th scope="col"><?php esc_html_e('Estado', 'kulimbos'); ?></th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($product_sheet_data['variants'] as $variant) : ?>
-									<?php
-									$variant_price = ! empty($variant['sale_price']) ? (int) $variant['sale_price'] : (int) $variant['regular_price'];
-									?>
-									<tr>
-										<th scope="row"><?php echo esc_html($variant['label']); ?></th>
-										<td><?php echo esc_html($variant['design']); ?></td>
-										<td><?php echo esc_html($variant['size']); ?></td>
-										<td><?php echo esc_html($variant['color']); ?></td>
-										<td><?php echo $variant_price > 0 ? esc_html('$' . number_format($variant_price, 0, ',', '.')) : esc_html__('Por definir', 'kulimbos'); ?></td>
-										<td><?php echo esc_html($product_status_labels[$variant['status']] ?? $variant['status']); ?></td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
-				<?php endif; ?>
-			</section>
-		<?php endif; ?>
-
-		<?php if (! empty($product_sheet_data['content_blocks'])) : ?>
-			<div class="product-content-sheet">
-				<?php foreach ($product_sheet_data['content_blocks'] as $block) : ?>
-					<section class="product-spec-panel">
-						<h3><?php echo esc_html($block['title']); ?></h3>
-						<?php echo wp_kses_post(wpautop(esc_html($block['content']))); ?>
-					</section>
-				<?php endforeach; ?>
-			</div>
-		<?php endif; ?>
-
-		<?php if (! empty($product_sheet_data['size_tables'])) : ?>
-			<section class="product-size-tables" aria-labelledby="product-size-tables-title">
-				<h3 id="product-size-tables-title"><?php esc_html_e('Tablas técnicas', 'kulimbos'); ?></h3>
-				<?php foreach ($product_sheet_data['size_tables'] as $table) : ?>
-					<div class="product-table-wrap">
-						<h4><?php echo esc_html($table['title']); ?></h4>
-						<table class="product-data-table">
-							<thead>
-								<tr>
-									<?php foreach ($table['columns'] as $column) : ?>
-										<th scope="col"><?php echo esc_html($column); ?></th>
-									<?php endforeach; ?>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($table['rows'] as $row) : ?>
-									<tr>
-										<?php foreach ($row as $index => $cell) : ?>
-											<?php if (0 === $index) : ?>
-												<th scope="row"><?php echo esc_html($cell); ?></th>
-											<?php else : ?>
-												<td><?php echo esc_html($cell); ?></td>
-											<?php endif; ?>
-										<?php endforeach; ?>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-						<?php if (! empty($table['source_note'])) : ?>
-							<p class="product-table-wrap__note"><?php echo esc_html($table['source_note']); ?></p>
-						<?php endif; ?>
-					</div>
-				<?php endforeach; ?>
-			</section>
-		<?php endif; ?>
-	</div>
-</section>
+	</section>
 <?php endif; ?>
 
 <?php if (! empty($related_products)) : ?>
-<section class="product-related" aria-labelledby="product-related-title">
-	<div class="container">
-		<h2 class="product-section-title" id="product-related-title"><?php esc_html_e('Productos relacionados', 'kulimbos'); ?></h2>
-		<ul class="product-related__grid" role="list">
-			<?php foreach ($related_products as $product) : ?>
-				<?php
-				$product_image_path = ! empty($product['image']) ? $theme_dir . '/assets/img/products/' . sanitize_file_name($product['image']) : '';
-				$product_image_url  = ! empty($product['image_url']) ? $product['image_url'] : (! empty($product['image']) ? $theme_uri . '/assets/img/products/' . sanitize_file_name($product['image']) : '');
-				$product_cart_id    = isset($product['id']) ? (string) $product['id'] : sanitize_title($product['name']);
-				$product_price_value = isset($product['price_value']) ? absint($product['price_value']) : (int) preg_replace('/[^\d]/', '', (string) $product['price']);
-				$product_stock      = isset($product['stock']) ? absint($product['stock']) : 99;
-				?>
-				<li class="product-card">
-					<div class="product-card__image-wrap">
-						<?php if (($product_image_path && file_exists($product_image_path)) || ! empty($product['image_url'])) : ?>
-							<img class="product-card__image" src="<?php echo esc_url($product_image_url); ?>" alt="<?php echo esc_attr($product['alt']); ?>" width="400" height="400" loading="lazy" decoding="async">
-						<?php else : ?>
-							<div class="product-card__image product-card__image--placeholder" role="img" aria-label="<?php echo esc_attr($product['alt']); ?>">
-								<span><?php esc_html_e('Imagen del producto', 'kulimbos'); ?></span>
-							</div>
-						<?php endif; ?>
-						<button
-							class="product-card__wishlist"
-							type="button"
-							data-favorite-toggle
-							data-favorite-product-id="<?php echo esc_attr($product_cart_id); ?>"
-							data-favorite-product-name="<?php echo esc_attr($product['name']); ?>"
-							data-favorite-product-price="<?php echo esc_attr((string) $product_price_value); ?>"
-							data-favorite-product-url="<?php echo esc_url($product['url']); ?>"
-							data-favorite-product-image="<?php echo esc_url($product_image_url); ?>"
-							data-favorite-product-stock="<?php echo esc_attr((string) $product_stock); ?>"
-							aria-label="<?php echo esc_attr(sprintf(__('Agregar %s a favoritos', 'kulimbos'), $product['name'])); ?>">
-							<?php kulimbos_the_icon('heart', '', 25); ?>
-						</button>
-					</div>
-					<div class="product-card__body">
-						<h3 class="product-card__name">
-							<a href="<?php echo esc_url($product['url']); ?>"><?php echo esc_html($product['name']); ?></a>
-						</h3>
-						<div class="product-card__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $product['rating'])); ?>">
-							<?php for ($i = 0; $i < 5; $i++) : ?>
-								<span class="star <?php echo esc_attr($i < floor($product['rating']) ? 'star--full' : 'star--empty'); ?>" aria-hidden="true">
-									<?php kulimbos_the_icon('star', '', 25); ?>
-								</span>
-							<?php endfor; ?>
-							<span class="product-card__reviews">(<?php echo absint($product['reviews']); ?>)</span>
-						</div>
-						<div class="product-card__footer">
-							<span class="product-card__price"><?php echo esc_html($product['price']); ?></span>
+	<section class="product-related" aria-labelledby="product-related-title">
+		<div class="container">
+			<h2 class="product-section-title" id="product-related-title"><?php esc_html_e('Productos relacionados', 'kulimbos'); ?></h2>
+			<ul class="product-related__grid" role="list">
+				<?php foreach ($related_products as $product) : ?>
+					<?php
+					$product_image_path = ! empty($product['image']) ? $theme_dir . '/assets/img/products/' . sanitize_file_name($product['image']) : '';
+					$product_image_url  = ! empty($product['image_url']) ? $product['image_url'] : (! empty($product['image']) ? $theme_uri . '/assets/img/products/' . sanitize_file_name($product['image']) : '');
+					$product_cart_id    = isset($product['id']) ? (string) $product['id'] : sanitize_title($product['name']);
+					$product_price_value = isset($product['price_value']) ? absint($product['price_value']) : (int) preg_replace('/[^\d]/', '', (string) $product['price']);
+					$product_stock      = isset($product['stock']) ? absint($product['stock']) : 99;
+					?>
+					<li class="product-card">
+						<div class="product-card__image-wrap">
+							<?php if (($product_image_path && file_exists($product_image_path)) || ! empty($product['image_url'])) : ?>
+								<img class="product-card__image" src="<?php echo esc_url($product_image_url); ?>" alt="<?php echo esc_attr($product['alt']); ?>" width="400" height="400" loading="lazy" decoding="async">
+							<?php else : ?>
+								<div class="product-card__image product-card__image--placeholder" role="img" aria-label="<?php echo esc_attr($product['alt']); ?>">
+									<span><?php esc_html_e('Imagen del producto', 'kulimbos'); ?></span>
+								</div>
+							<?php endif; ?>
 							<button
-								class="product-card__add-to-cart"
+								class="product-card__wishlist"
 								type="button"
-								data-cart-add
-								data-cart-product-id="<?php echo esc_attr($product_cart_id); ?>"
-								data-cart-product-name="<?php echo esc_attr($product['name']); ?>"
-								data-cart-product-price="<?php echo esc_attr((string) $product_price_value); ?>"
-								data-cart-product-url="<?php echo esc_url($product['url']); ?>"
-								data-cart-product-image="<?php echo esc_url($product_image_url); ?>"
-								data-cart-product-stock="<?php echo esc_attr((string) $product_stock); ?>"
-								aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
-								<?php kulimbos_the_icon('shopping-cart', '', 25); ?>
+								data-favorite-toggle
+								data-favorite-product-id="<?php echo esc_attr($product_cart_id); ?>"
+								data-favorite-product-name="<?php echo esc_attr($product['name']); ?>"
+								data-favorite-product-price="<?php echo esc_attr((string) $product_price_value); ?>"
+								data-favorite-product-url="<?php echo esc_url($product['url']); ?>"
+								data-favorite-product-image="<?php echo esc_url($product_image_url); ?>"
+								data-favorite-product-stock="<?php echo esc_attr((string) $product_stock); ?>"
+								aria-label="<?php echo esc_attr(sprintf(__('Agregar %s a favoritos', 'kulimbos'), $product['name'])); ?>">
+								<?php kulimbos_the_icon('heart', '', 25); ?>
 							</button>
 						</div>
-					</div>
-				</li>
-			<?php endforeach; ?>
-		</ul>
-	</div>
-</section>
+						<div class="product-card__body">
+							<h3 class="product-card__name">
+								<a href="<?php echo esc_url($product['url']); ?>"><?php echo esc_html($product['name']); ?></a>
+							</h3>
+							<div class="product-card__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $product['rating'])); ?>">
+								<?php for ($i = 0; $i < 5; $i++) : ?>
+									<span class="star <?php echo esc_attr($i < floor($product['rating']) ? 'star--full' : 'star--empty'); ?>" aria-hidden="true">
+										<?php kulimbos_the_icon('star', '', 25); ?>
+									</span>
+								<?php endfor; ?>
+								<span class="product-card__reviews">(<?php echo absint($product['reviews']); ?>)</span>
+							</div>
+							<div class="product-card__footer">
+								<span class="product-card__price"><?php echo esc_html($product['price']); ?></span>
+								<button
+									class="product-card__add-to-cart"
+									type="button"
+									data-cart-add
+									data-cart-product-id="<?php echo esc_attr($product_cart_id); ?>"
+									data-cart-product-name="<?php echo esc_attr($product['name']); ?>"
+									data-cart-product-price="<?php echo esc_attr((string) $product_price_value); ?>"
+									data-cart-product-url="<?php echo esc_url($product['url']); ?>"
+									data-cart-product-image="<?php echo esc_url($product_image_url); ?>"
+									data-cart-product-stock="<?php echo esc_attr((string) $product_stock); ?>"
+									aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
+									<?php kulimbos_the_icon('shopping-cart', '', 25); ?>
+								</button>
+							</div>
+						</div>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</div>
+	</section>
 <?php endif; ?>
 
 <?php if (! empty($reviews)) : ?>
-<section class="product-reviews" aria-labelledby="product-reviews-title">
-	<div class="container">
-		<div class="product-reviews__header">
-			<h2 class="product-section-title" id="product-reviews-title"><?php esc_html_e('Opiniones de nuestros clientes', 'kulimbos'); ?></h2>
-			<div class="product-reviews__summary-stars" aria-label="<?php esc_attr_e('Promedio 4.9 de 5', 'kulimbos'); ?>">
-				<?php for ($i = 0; $i < 5; $i++) : ?>
-					<span class="star star--full" aria-hidden="true"><?php kulimbos_the_icon('star', '', 22); ?></span>
-				<?php endfor; ?>
-				<span><?php esc_html_e('4.9 (128 reseñas)', 'kulimbos'); ?></span>
-			</div>
-			<a class="product-reviews__write" href="<?php echo esc_url(home_url('/opiniones/')); ?>">
-				<?php kulimbos_the_icon('tag', '', 18); ?>
-				<span><?php esc_html_e('Escribir una opinión', 'kulimbos'); ?></span>
-			</a>
-		</div>
-
-		<div class="product-reviews__grid">
-			<aside class="product-score" aria-label="<?php esc_attr_e('Resumen de calificaciones', 'kulimbos'); ?>">
-				<strong>4.9</strong>
-				<div aria-hidden="true">
+	<section class="product-reviews" aria-labelledby="product-reviews-title">
+		<div class="container">
+			<div class="product-reviews__header">
+				<h2 class="product-section-title" id="product-reviews-title"><?php esc_html_e('Opiniones de nuestros clientes', 'kulimbos'); ?></h2>
+				<div class="product-reviews__summary-stars" aria-label="<?php esc_attr_e('Promedio 4.9 de 5', 'kulimbos'); ?>">
 					<?php for ($i = 0; $i < 5; $i++) : ?>
-						<span class="star star--full"><?php kulimbos_the_icon('star', '', 22); ?></span>
+						<span class="star star--full" aria-hidden="true"><?php kulimbos_the_icon('star', '', 22); ?></span>
 					<?php endfor; ?>
+					<span><?php esc_html_e('4.9 (128 reseñas)', 'kulimbos'); ?></span>
 				</div>
-				<p><?php esc_html_e('Basado en 128 reseñas', 'kulimbos'); ?></p>
-				<ul role="list">
-					<?php foreach (array(5 => 109, 4 => 15, 3 => 3, 2 => 1, 1 => 0) as $stars => $amount) : ?>
-						<li>
-							<span><?php echo absint($stars); ?></span>
-							<meter min="0" max="109" value="<?php echo absint($amount); ?>"><?php echo absint($amount); ?></meter>
-							<span><?php echo absint($amount); ?></span>
-						</li>
-					<?php endforeach; ?>
-				</ul>
-			</aside>
+				<a class="product-reviews__write" href="<?php echo esc_url(home_url('/opiniones/')); ?>">
+					<?php kulimbos_the_icon('tag', '', 18); ?>
+					<span><?php esc_html_e('Escribir una opinión', 'kulimbos'); ?></span>
+				</a>
+			</div>
 
-			<?php foreach ($reviews as $review) : ?>
-				<article class="review-card">
-					<header>
-						<div class="review-card__avatar" aria-hidden="true"><?php echo esc_html(substr($review['name'], 0, 1)); ?></div>
-						<div>
-							<h3><?php echo esc_html($review['name']); ?></h3>
-							<span><?php esc_html_e('Compra verificada', 'kulimbos'); ?></span>
-						</div>
-					</header>
-					<div class="review-card__stars" aria-label="<?php esc_attr_e('Calificación: 5 de 5', 'kulimbos'); ?>">
+			<div class="product-reviews__grid">
+				<aside class="product-score" aria-label="<?php esc_attr_e('Resumen de calificaciones', 'kulimbos'); ?>">
+					<strong>4.9</strong>
+					<div aria-hidden="true">
 						<?php for ($i = 0; $i < 5; $i++) : ?>
-							<span class="star star--full" aria-hidden="true"><?php kulimbos_the_icon('star', '', 18); ?></span>
+							<span class="star star--full"><?php kulimbos_the_icon('star', '', 22); ?></span>
 						<?php endfor; ?>
 					</div>
-					<p><?php echo esc_html($review['text']); ?></p>
-					<footer><?php echo esc_html($review['date']); ?></footer>
-				</article>
-			<?php endforeach; ?>
+					<p><?php esc_html_e('Basado en 128 reseñas', 'kulimbos'); ?></p>
+					<ul role="list">
+						<?php foreach (array(5 => 109, 4 => 15, 3 => 3, 2 => 1, 1 => 0) as $stars => $amount) : ?>
+							<li>
+								<span><?php echo absint($stars); ?></span>
+								<meter min="0" max="109" value="<?php echo absint($amount); ?>"><?php echo absint($amount); ?></meter>
+								<span><?php echo absint($amount); ?></span>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</aside>
+
+				<?php foreach ($reviews as $review) : ?>
+					<article class="review-card">
+						<header>
+							<div class="review-card__avatar" aria-hidden="true"><?php echo esc_html(substr($review['name'], 0, 1)); ?></div>
+							<div>
+								<h3><?php echo esc_html($review['name']); ?></h3>
+								<span><?php esc_html_e('Compra verificada', 'kulimbos'); ?></span>
+							</div>
+						</header>
+						<div class="review-card__stars" aria-label="<?php esc_attr_e('Calificación: 5 de 5', 'kulimbos'); ?>">
+							<?php for ($i = 0; $i < 5; $i++) : ?>
+								<span class="star star--full" aria-hidden="true"><?php kulimbos_the_icon('star', '', 18); ?></span>
+							<?php endfor; ?>
+						</div>
+						<p><?php echo esc_html($review['text']); ?></p>
+						<footer><?php echo esc_html($review['date']); ?></footer>
+					</article>
+				<?php endforeach; ?>
+			</div>
 		</div>
-	</div>
-</section>
+	</section>
 <?php endif; ?>
 
 <section class="product-benefits-strip" aria-label="<?php esc_attr_e('Beneficios de Kulimbos', 'kulimbos'); ?>">
