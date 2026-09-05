@@ -31,6 +31,23 @@ if ($is_all_products_view) {
 if ($current_term instanceof WP_Term) {
 	$page_title       = $current_term->name;
 	$page_description = term_description($current_term, 'categoria_producto') ?: $page_description;
+
+	if (function_exists('kulimbos_get_product_category_image_data')) {
+		$category_image = kulimbos_get_product_category_image_data((int) $current_term->term_id, 'large');
+
+		if ($category_image) {
+			$hero_image = array(
+				'src'    => $category_image['src'],
+				'path'   => '',
+				'alt'    => $category_image['alt'] ?: sprintf(
+					__('Productos de la categoría %s', 'kulimbos'),
+					$current_term->name
+				),
+				'width'  => $category_image['width'] ?: 400,
+				'height' => $category_image['height'] ?: 400,
+			);
+		}
+	}
 }
 
 $feature_items = array(
@@ -298,9 +315,16 @@ $color_swatch_map = array(
 				<h1 id="plushies-title"><?php echo esc_html($page_title); ?></h1>
 				<p><?php echo wp_kses_post($page_description); ?></p>
 			</div>
-			<div class="plushies-hero__visual" aria-hidden="true">
-				<?php if (file_exists($hero_image['path'])) : ?>
-					<img src="<?php echo esc_url($hero_image['src']); ?>" alt="" width="400" height="400" fetchpriority="high" decoding="async">
+			<div class="plushies-hero__visual">
+				<?php if (! empty($hero_image['src']) && (empty($hero_image['path']) || file_exists($hero_image['path']))) : ?>
+					<img
+						src="<?php echo esc_url($hero_image['src']); ?>"
+						alt="<?php echo esc_attr($hero_image['alt']); ?>"
+						width="<?php echo esc_attr((string) ($hero_image['width'] ?? 400)); ?>"
+						height="<?php echo esc_attr((string) ($hero_image['height'] ?? 400)); ?>"
+						fetchpriority="high"
+						decoding="async"
+					>
 				<?php endif; ?>
 			</div>
 		</header>
@@ -521,7 +545,7 @@ $color_swatch_map = array(
 			</div>
 		</div>
 
-		<section class="plushies-newsletter" aria-label="<?php esc_attr_e('Suscripción a novedades', 'kulimbos'); ?>">
+		<!-- <section class="plushies-newsletter" aria-label="<?php esc_attr_e('Suscripción a novedades', 'kulimbos'); ?>">
 			<div>
 				<?php kulimbos_the_icon('heart', '', 54); ?>
 				<div>
@@ -534,6 +558,6 @@ $color_swatch_map = array(
 				<input id="plushies-newsletter-email" type="email" name="email" placeholder="<?php esc_attr_e('Ingresa tu correo electrónico', 'kulimbos'); ?>">
 				<button type="submit"><?php esc_html_e('Suscribirme', 'kulimbos'); ?></button>
 			</form>
-		</section>
+		</section> -->
 	</div>
 </section>

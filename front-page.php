@@ -18,9 +18,11 @@ get_header();
 	<?php get_template_part('template-parts/home/hero');	?>
 	<?php get_template_part('template-parts/home/benefits-bar');	?>
 	<?php get_template_part('template-parts/home/featured-products'); ?>
-	<?php get_template_part('template-parts/home/categories-grid'); ?>
+	<?php //get_template_part('template-parts/home/categories-grid'); 
+	?>
 	<?php get_template_part('template-parts/home/promo-banners'); ?>
-	<?php get_template_part('template-parts/home/testimonials'); ?>
+	<?php //get_template_part('template-parts/home/testimonials'); 
+	?>
 	<?php //get_template_part('template-parts/home/newsletter'); 
 	?>
 

@@ -342,26 +342,27 @@ Inicio / Categorías / Categoría padre / Subcategoría / Nombre del producto
 ### Flujo en WordPress
 
 1. Ir a **Productos → Categorías** y crear categorías jerárquicas, por ejemplo `Juguetes` y dentro `Peluches`.
-2. Ir a **Productos → Añadir nuevo**.
-3. Asignar una o más categorías de producto.
-4. Agregar imagen destacada. Esta imagen se usa como imagen principal del detalle y como primera miniatura de la galería.
-5. Configurar imágenes adicionales desde la caja **Galería del producto**. El campo usa la biblioteca de medios nativa de WordPress y guarda los IDs ordenados en `kulimbos_product_gallery_ids`.
-6. Configurar filtros desde los paneles del producto o desde el menú **Productos**:
+2. Editar cada categoría que necesite visual propio y configurar **Imagen de categoría**. El campo usa la biblioteca de medios nativa de WordPress y guarda el ID del adjunto en `kulimbos_category_image_id`; si no se configura, el catálogo usa la imagen visual por defecto.
+3. Ir a **Productos → Añadir nuevo**.
+4. Asignar una o más categorías de producto.
+5. Agregar imagen destacada. Esta imagen se usa como imagen principal del detalle y como primera miniatura de la galería.
+6. Configurar imágenes adicionales desde la caja **Galería del producto**. El campo usa la biblioteca de medios nativa de WordPress y guarda los IDs ordenados en `kulimbos_product_gallery_ids`.
+7. Configurar filtros desde los paneles del producto o desde el menú **Productos**:
    - **Edades** (`edad_producto`)
    - **Tamaños** (`tamano_producto`)
    - **Colores** (`color_producto`)
    - **Materiales** (`material_producto`)
    - **Marcas** (`marca_producto`)
    - **Tipos** (`tipo_producto`)
-7. Configurar **Precio** y **Stock** desde la caja **Datos comerciales**.
+8. Configurar **Precio** y **Stock** desde la caja **Datos comerciales**.
    - `kulimbos_product_price`
    - `kulimbos_product_stock`
    - `kulimbos_product_regular_price`
    - `kulimbos_product_sale_price`
    - `kulimbos_product_sku`
-8. Completar la caja **Ficha técnica del producto** cuando el producto requiera datos como marca, EAN, INVIMA, presentación, etapa/edad, origen, capacidad, dimensiones, estampado o material técnico.
-9. Completar la caja **Contenido comercial y validación** para características, cuidados, personalización, modo de preparación, advertencias, ingredientes explicados, notas de verificación, pendientes y fuentes internas.
-10. Completar la caja **Variantes, diseños y tablas técnicas** cuando el producto tenga diseños, tallas, combinaciones, presentaciones o precios por variante.
+9. Completar la caja **Ficha técnica del producto** cuando el producto requiera datos como marca, EAN, INVIMA, presentación, etapa/edad, origen, capacidad, dimensiones, estampado o material técnico.
+10. Completar la caja **Contenido comercial y validación** para características, cuidados, personalización, modo de preparación, advertencias, ingredientes explicados, notas de verificación, pendientes y fuentes internas.
+11. Completar la caja **Variantes, diseños y tablas técnicas** cuando el producto tenga diseños, tallas, combinaciones, presentaciones o precios por variante.
 
 La calificación no se edita manualmente en el producto. Se calcula desde comentarios aprobados que tengan `kulimbos_comment_rating` entre 1 y 5.
 

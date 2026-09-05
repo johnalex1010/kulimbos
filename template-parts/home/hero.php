@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-$hero_image_url = get_template_directory_uri() . '/assets/img/hero/hero.png';
+$hero_image_url = get_template_directory_uri() . '/assets/img/hero/hero.webp';
 ?>
 
 <section class="home-hero" aria-labelledby="home-hero-title">
@@ -71,7 +71,7 @@ $hero_image_url = get_template_directory_uri() . '/assets/img/hero/hero.png';
 			</ul>
 
 			<a class="home-hero__cta" href="<?php echo esc_url(home_url('/categorias/')); ?>">
-				<span><?php esc_html_e('¡Ver categorías!', 'kulimbos'); ?></span>
+				<span><?php esc_html_e('¡Ver productos!', 'kulimbos'); ?></span>
 				<?php kulimbos_the_icon('arrow-right', '', 20); ?>
 			</a>
 		</div>

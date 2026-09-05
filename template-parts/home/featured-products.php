@@ -75,7 +75,7 @@ if ($products_query->have_posts()) {
 			</h2>
 			<a class="home-section__link" href="<?php echo esc_url(get_post_type_archive_link('producto') ?: home_url('/productos/')); ?>">
 				<?php esc_html_e('Ver todos', 'kulimbos'); ?>
-				<?php kulimbos_the_icon('chevron-right', '', 16); ?>
+				<?php kulimbos_the_icon('chevron-right', '', 25); ?>
 			</a>
 		</div>
 
@@ -84,84 +84,84 @@ if ($products_query->have_posts()) {
 		<?php else : ?>
 			<ul class="product-grid" role="list">
 				<?php foreach ($products as $product) : ?>
-				<li class="product-card">
+					<li class="product-card">
 
-					<div class="product-card__image-wrap">
-						<?php if (! empty($product['image_url'])) : ?>
-							<img
-								class="product-card__image"
-								src="<?php echo esc_url($product['image_url']); ?>"
-								alt="<?php echo esc_attr($product['alt']); ?>"
-								width="400"
-								height="400"
-								loading="lazy"
-								decoding="async">
-						<?php else : ?>
-							<div class="product-card__image plushies-card__placeholder" role="img" aria-label="<?php echo esc_attr($product['alt']); ?>">
-								<span><?php echo esc_html($product['name']); ?></span>
-							</div>
-						<?php endif; ?>
-						<button
-							class="product-card__wishlist"
-							type="button"
-							data-favorite-toggle
-							data-favorite-product-id="<?php echo esc_attr((string) $product['id']); ?>"
-							data-favorite-product-name="<?php echo esc_attr($product['name']); ?>"
-							data-favorite-product-price="<?php echo esc_attr((string) absint($product['price'])); ?>"
-							data-favorite-product-url="<?php echo esc_url($product['url']); ?>"
-							data-favorite-product-image="<?php echo esc_url($product['image_url']); ?>"
-							data-favorite-product-stock="<?php echo esc_attr((string) absint($product['stock'])); ?>"
-							aria-label="<?php echo esc_attr(sprintf(__('Agregar %s a favoritos', 'kulimbos'), $product['name'])); ?>">
-							<?php kulimbos_the_icon('heart', '', 25); ?>
-						</button>
-					</div>
-
-					<div class="product-card__body">
-						<h3 class="product-card__name">
-							<a href="<?php echo esc_url($product['url']); ?>">
-								<?php echo esc_html($product['name']); ?>
-							</a>
-						</h3>
-
-						<div class="product-card__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $product['rating'])); ?>">
-							<?php
-							$full_stars = (int) floor($product['rating']);
-							$half_star  = ($product['rating'] - $full_stars) >= 0.5;
-							for ($i = 0; $i < 5; $i++) :
-								$cls = $i < $full_stars ? 'star--full' : ($i === $full_stars && $half_star ? 'star--half' : 'star--empty');
-							?>
-								<span class="star <?php echo esc_attr($cls); ?>" aria-hidden="true">
-									<?php kulimbos_the_icon('star', '', 24); ?>
-								</span>
-							<?php endfor; ?>
-							<span class="product-card__reviews">(<?php echo absint($product['reviews']); ?>)</span>
-						</div>
-
-						<div class="product-card__footer">
-							<span class="product-card__price">
-								<?php
-								echo $product['has_price']
-									? esc_html($product['price_label'])
-									: esc_html__('Consultar precio', 'kulimbos');
-								?>
-							</span>
+						<div class="product-card__image-wrap">
+							<?php if (! empty($product['image_url'])) : ?>
+								<img
+									class="product-card__image"
+									src="<?php echo esc_url($product['image_url']); ?>"
+									alt="<?php echo esc_attr($product['alt']); ?>"
+									width="400"
+									height="400"
+									loading="lazy"
+									decoding="async">
+							<?php else : ?>
+								<div class="product-card__image plushies-card__placeholder" role="img" aria-label="<?php echo esc_attr($product['alt']); ?>">
+									<span><?php echo esc_html($product['name']); ?></span>
+								</div>
+							<?php endif; ?>
 							<button
-								class="product-card__add-to-cart"
+								class="product-card__wishlist"
 								type="button"
-								data-cart-add
-								data-cart-product-id="<?php echo esc_attr((string) $product['id']); ?>"
-								data-cart-product-name="<?php echo esc_attr($product['name']); ?>"
-								data-cart-product-price="<?php echo esc_attr((string) absint($product['price'])); ?>"
-								data-cart-product-url="<?php echo esc_url($product['url']); ?>"
-								data-cart-product-image="<?php echo esc_url($product['image_url']); ?>"
-								data-cart-product-stock="<?php echo esc_attr((string) absint($product['stock'])); ?>"
-								aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
-								<?php kulimbos_the_icon('shopping-cart', '', 25); ?>
+								data-favorite-toggle
+								data-favorite-product-id="<?php echo esc_attr((string) $product['id']); ?>"
+								data-favorite-product-name="<?php echo esc_attr($product['name']); ?>"
+								data-favorite-product-price="<?php echo esc_attr((string) absint($product['price'])); ?>"
+								data-favorite-product-url="<?php echo esc_url($product['url']); ?>"
+								data-favorite-product-image="<?php echo esc_url($product['image_url']); ?>"
+								data-favorite-product-stock="<?php echo esc_attr((string) absint($product['stock'])); ?>"
+								aria-label="<?php echo esc_attr(sprintf(__('Agregar %s a favoritos', 'kulimbos'), $product['name'])); ?>">
+								<?php kulimbos_the_icon('heart', '', 25); ?>
 							</button>
 						</div>
-					</div>
 
-				</li>
+						<div class="product-card__body">
+							<h3 class="product-card__name">
+								<a href="<?php echo esc_url($product['url']); ?>">
+									<?php echo esc_html($product['name']); ?>
+								</a>
+							</h3>
+
+							<div class="product-card__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $product['rating'])); ?>">
+								<?php
+								$full_stars = (int) floor($product['rating']);
+								$half_star  = ($product['rating'] - $full_stars) >= 0.5;
+								for ($i = 0; $i < 5; $i++) :
+									$cls = $i < $full_stars ? 'star--full' : ($i === $full_stars && $half_star ? 'star--half' : 'star--empty');
+								?>
+									<span class="star <?php echo esc_attr($cls); ?>" aria-hidden="true">
+										<?php kulimbos_the_icon('star', '', 24); ?>
+									</span>
+								<?php endfor; ?>
+								<span class="product-card__reviews">(<?php echo absint($product['reviews']); ?>)</span>
+							</div>
+
+							<div class="product-card__footer">
+								<span class="product-card__price">
+									<?php
+									echo $product['has_price']
+										? esc_html($product['price_label'])
+										: esc_html__('Consultar precio', 'kulimbos');
+									?>
+								</span>
+								<button
+									class="product-card__add-to-cart"
+									type="button"
+									data-cart-add
+									data-cart-product-id="<?php echo esc_attr((string) $product['id']); ?>"
+									data-cart-product-name="<?php echo esc_attr($product['name']); ?>"
+									data-cart-product-price="<?php echo esc_attr((string) absint($product['price'])); ?>"
+									data-cart-product-url="<?php echo esc_url($product['url']); ?>"
+									data-cart-product-image="<?php echo esc_url($product['image_url']); ?>"
+									data-cart-product-stock="<?php echo esc_attr((string) absint($product['stock'])); ?>"
+									aria-label="<?php echo esc_attr(sprintf(__('Agregar %s al carrito', 'kulimbos'), $product['name'])); ?>">
+									<?php kulimbos_the_icon('shopping-cart', '', 25); ?>
+								</button>
+							</div>
+						</div>
+
+					</li>
 				<?php endforeach; ?>
 			</ul>
 		<?php endif; ?>

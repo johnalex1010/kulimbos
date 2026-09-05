@@ -21,7 +21,7 @@ $banners = array(
 		'title'    => __('Ofertas especiales', 'kulimbos'),
 		'desc'     => __('Descuentos increíbles en tus productos favoritos', 'kulimbos'),
 		'cta_text' => __('¡Ver ofertas!', 'kulimbos'),
-		'cta_url'  => home_url('/ofertas/'),
+		'cta_url'  => home_url('/categorias/'),
 	),
 	array(
 		'image'    => 'novedades',
@@ -29,7 +29,7 @@ $banners = array(
 		'title'    => __('Novedades', 'kulimbos'),
 		'desc'     => __('Descubre los productos más nuevos para tu pequeño', 'kulimbos'),
 		'cta_text' => __('¡Ver novedades!', 'kulimbos'),
-		'cta_url'  => home_url('/novedades/'),
+		'cta_url'  => home_url('/categorias/'),
 	),
 );
 ?>

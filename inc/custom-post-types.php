@@ -1391,6 +1391,20 @@ add_action( 'comment_post', 'kulimbos_save_product_comment_rating' );
  */
 function kulimbos_register_product_term_meta(): void {
 	register_term_meta(
+		'categoria_producto',
+		'kulimbos_category_image_id',
+		array(
+			'type'              => 'integer',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'sanitize_callback' => 'absint',
+			'auth_callback'     => static function (): bool {
+				return current_user_can( 'manage_categories' );
+			},
+		)
+	);
+
+	register_term_meta(
 		'color_producto',
 		'kulimbos_color_hex',
 		array(
@@ -1467,6 +1481,163 @@ function kulimbos_save_color_product_hex_field( int $term_id ): void {
 }
 add_action( 'created_color_producto', 'kulimbos_save_color_product_hex_field' );
 add_action( 'edited_color_producto', 'kulimbos_save_color_product_hex_field' );
+
+/**
+ * Obtiene los datos de la imagen configurada para una categoría de producto.
+ *
+ * @param int    $term_id ID del término.
+ * @param string $size Tamaño de imagen registrado en WordPress.
+ * @return array{ id:int, src:string, alt:string, width:int, height:int }|null
+ */
+function kulimbos_get_product_category_image_data( int $term_id, string $size = 'large' ): ?array {
+	$image_id = absint( get_term_meta( $term_id, 'kulimbos_category_image_id', true ) );
+
+	if ( ! $image_id ) {
+		return null;
+	}
+
+	$image = wp_get_attachment_image_src( $image_id, $size );
+
+	if ( ! $image ) {
+		return null;
+	}
+
+	$alt = get_post_meta( $image_id, '_wp_attachment_image_alt', true );
+
+	return array(
+		'id'     => $image_id,
+		'src'    => $image[0],
+		'alt'    => is_string( $alt ) ? $alt : '',
+		'width'  => isset( $image[1] ) ? (int) $image[1] : 0,
+		'height' => isset( $image[2] ) ? (int) $image[2] : 0,
+	);
+}
+
+/**
+ * Muestra el campo de imagen al crear una categoría de producto.
+ */
+function kulimbos_add_product_category_image_field(): void {
+	?>
+	<div class="form-field term-category-image-wrap">
+		<label for="kulimbos-category-image-id"><?php esc_html_e( 'Imagen de categoría', 'kulimbos' ); ?></label>
+		<div class="kulimbos-term-image-field" data-term-image-field>
+			<input type="hidden" id="kulimbos-category-image-id" name="kulimbos_category_image_id" value="" data-term-image-input>
+			<div class="kulimbos-term-image-field__preview" data-term-image-preview hidden></div>
+			<div class="kulimbos-term-image-field__actions">
+				<button type="button" class="button" data-term-image-select><?php esc_html_e( 'Seleccionar imagen', 'kulimbos' ); ?></button>
+				<button type="button" class="button button-link-delete" data-term-image-remove hidden><?php esc_html_e( 'Quitar imagen', 'kulimbos' ); ?></button>
+			</div>
+		</div>
+		<p><?php esc_html_e( 'Esta imagen se usará como visual principal de la categoría en el catálogo.', 'kulimbos' ); ?></p>
+	</div>
+	<?php
+}
+add_action( 'categoria_producto_add_form_fields', 'kulimbos_add_product_category_image_field' );
+
+/**
+ * Muestra el campo de imagen al editar una categoría de producto.
+ *
+ * @param WP_Term $term Término actual.
+ */
+function kulimbos_edit_product_category_image_field( WP_Term $term ): void {
+	$image_data = kulimbos_get_product_category_image_data( (int) $term->term_id, 'thumbnail' );
+	$image_id   = $image_data ? $image_data['id'] : 0;
+	?>
+	<tr class="form-field term-category-image-wrap">
+		<th scope="row">
+			<label for="kulimbos-category-image-id"><?php esc_html_e( 'Imagen de categoría', 'kulimbos' ); ?></label>
+		</th>
+		<td>
+			<div class="kulimbos-term-image-field" data-term-image-field>
+				<input type="hidden" id="kulimbos-category-image-id" name="kulimbos_category_image_id" value="<?php echo esc_attr( (string) $image_id ); ?>" data-term-image-input>
+				<div class="kulimbos-term-image-field__preview" data-term-image-preview <?php echo $image_data ? '' : 'hidden'; ?>>
+					<?php if ( $image_data ) : ?>
+						<img src="<?php echo esc_url( $image_data['src'] ); ?>" alt="<?php echo esc_attr( $image_data['alt'] ); ?>" width="120" height="120">
+					<?php endif; ?>
+				</div>
+				<div class="kulimbos-term-image-field__actions">
+					<button type="button" class="button" data-term-image-select><?php esc_html_e( 'Seleccionar imagen', 'kulimbos' ); ?></button>
+					<button type="button" class="button button-link-delete" data-term-image-remove <?php echo $image_data ? '' : 'hidden'; ?>><?php esc_html_e( 'Quitar imagen', 'kulimbos' ); ?></button>
+				</div>
+			</div>
+			<p class="description"><?php esc_html_e( 'Esta imagen se usará como visual principal de la categoría en el catálogo.', 'kulimbos' ); ?></p>
+		</td>
+	</tr>
+	<?php
+}
+add_action( 'categoria_producto_edit_form_fields', 'kulimbos_edit_product_category_image_field' );
+
+/**
+ * Guarda la imagen de una categoría de producto.
+ *
+ * @param int $term_id ID del término.
+ */
+function kulimbos_save_product_category_image_field( int $term_id ): void {
+	if ( ! current_user_can( 'manage_categories' ) ) {
+		return;
+	}
+
+	if ( ! isset( $_POST['kulimbos_category_image_id'] ) ) {
+		return;
+	}
+
+	$image_id = absint( wp_unslash( $_POST['kulimbos_category_image_id'] ) );
+
+	if ( $image_id && 'attachment' === get_post_type( $image_id ) ) {
+		update_term_meta( $term_id, 'kulimbos_category_image_id', $image_id );
+		return;
+	}
+
+	delete_term_meta( $term_id, 'kulimbos_category_image_id' );
+}
+add_action( 'created_categoria_producto', 'kulimbos_save_product_category_image_field' );
+add_action( 'edited_categoria_producto', 'kulimbos_save_product_category_image_field' );
+
+/**
+ * Encola la biblioteca de medios para la imagen de categorías de producto.
+ *
+ * @param string $hook_suffix Pantalla actual del admin.
+ */
+function kulimbos_enqueue_product_category_admin_assets( string $hook_suffix ): void {
+	if ( ! in_array( $hook_suffix, array( 'edit-tags.php', 'term.php' ), true ) ) {
+		return;
+	}
+
+	$screen = get_current_screen();
+
+	if ( ! $screen || 'categoria_producto' !== $screen->taxonomy ) {
+		return;
+	}
+
+	$script_path = get_template_directory() . '/assets/admin/product-category-image.js';
+	$style_path  = get_template_directory() . '/assets/admin/product-category-image.css';
+
+	wp_enqueue_media();
+	wp_enqueue_style(
+		'kulimbos-product-category-image-admin',
+		get_template_directory_uri() . '/assets/admin/product-category-image.css',
+		array(),
+		file_exists( $style_path ) ? filemtime( $style_path ) : KULIMBOS_VERSION
+	);
+
+	wp_enqueue_script(
+		'kulimbos-product-category-image-admin',
+		get_template_directory_uri() . '/assets/admin/product-category-image.js',
+		array(),
+		file_exists( $script_path ) ? filemtime( $script_path ) : KULIMBOS_VERSION,
+		true
+	);
+
+	wp_localize_script(
+		'kulimbos-product-category-image-admin',
+		'kulimbosProductCategoryImageAdmin',
+		array(
+			'frameTitle' => __( 'Seleccionar imagen de categoría', 'kulimbos' ),
+			'buttonText' => __( 'Usar esta imagen', 'kulimbos' ),
+		)
+	);
+}
+add_action( 'admin_enqueue_scripts', 'kulimbos_enqueue_product_category_admin_assets' );
 
 /**
  * Registra reglas de rewrite adicionales para el catálogo.
