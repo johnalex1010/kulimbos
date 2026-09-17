@@ -85,6 +85,12 @@ if ($products_query->have_posts()) {
 			<ul class="product-grid" role="list">
 				<?php foreach ($products as $product) : ?>
 					<li class="product-card">
+						<a
+							class="product-card__detail-link"
+							href="<?php echo esc_url($product['url']); ?>"
+							aria-label="<?php echo esc_attr(sprintf(__('Ver detalle de %s', 'kulimbos'), $product['name'])); ?>">
+							<span class="screen-reader-text"><?php echo esc_html(sprintf(__('Ver detalle de %s', 'kulimbos'), $product['name'])); ?></span>
+						</a>
 
 						<div class="product-card__image-wrap">
 							<?php if (! empty($product['image_url'])) : ?>
@@ -118,9 +124,7 @@ if ($products_query->have_posts()) {
 
 						<div class="product-card__body">
 							<h3 class="product-card__name">
-								<a href="<?php echo esc_url($product['url']); ?>">
-									<?php echo esc_html($product['name']); ?>
-								</a>
+								<?php echo esc_html($product['name']); ?>
 							</h3>
 
 							<div class="product-card__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $product['rating'])); ?>">

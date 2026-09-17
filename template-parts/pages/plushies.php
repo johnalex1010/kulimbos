@@ -468,6 +468,12 @@ $color_swatch_map = array(
 							data-has-price="<?php echo esc_attr($product_has_price ? 'true' : 'false'); ?>"
 							data-name="<?php echo esc_attr($product['name']); ?>"
 							data-popularity="<?php echo absint($product['reviews']); ?>">
+							<a
+								class="product-card__detail-link"
+								href="<?php echo esc_url($product['url']); ?>"
+								aria-label="<?php echo esc_attr(sprintf(__('Ver detalle de %s', 'kulimbos'), $product['name'])); ?>">
+								<span class="screen-reader-text"><?php echo esc_html(sprintf(__('Ver detalle de %s', 'kulimbos'), $product['name'])); ?></span>
+							</a>
 							<div class="product-card__image-wrap">
 								<?php if (($image_path && file_exists($image_path)) || ! empty($product['image_url'])) : ?>
 									<img class="product-card__image" src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($product['alt']); ?>" width="400" height="400" loading="lazy" decoding="async">
@@ -492,7 +498,7 @@ $color_swatch_map = array(
 							</div>
 							<div class="product-card__body">
 								<h3 class="product-card__name">
-									<a href="<?php echo esc_url($product['url']); ?>"><?php echo esc_html($product['name']); ?></a>
+									<?php echo esc_html($product['name']); ?>
 								</h3>
 								<div class="product-card__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $product['rating'])); ?>">
 									<?php for ($i = 0; $i < 5; $i++) : ?>

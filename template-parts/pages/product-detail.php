@@ -691,6 +691,12 @@ $whatsapp_url = 'https://api.whatsapp.com/send?phone=573144681188&text=' . rawur
 					$product_stock      = isset($product['stock']) ? absint($product['stock']) : 99;
 					?>
 					<li class="product-card">
+						<a
+							class="product-card__detail-link"
+							href="<?php echo esc_url($product['url']); ?>"
+							aria-label="<?php echo esc_attr(sprintf(__('Ver detalle de %s', 'kulimbos'), $product['name'])); ?>">
+							<span class="screen-reader-text"><?php echo esc_html(sprintf(__('Ver detalle de %s', 'kulimbos'), $product['name'])); ?></span>
+						</a>
 						<div class="product-card__image-wrap">
 							<?php if (($product_image_path && file_exists($product_image_path)) || ! empty($product['image_url'])) : ?>
 								<img class="product-card__image" src="<?php echo esc_url($product_image_url); ?>" alt="<?php echo esc_attr($product['alt']); ?>" width="400" height="400" loading="lazy" decoding="async">
@@ -715,7 +721,7 @@ $whatsapp_url = 'https://api.whatsapp.com/send?phone=573144681188&text=' . rawur
 						</div>
 						<div class="product-card__body">
 							<h3 class="product-card__name">
-								<a href="<?php echo esc_url($product['url']); ?>"><?php echo esc_html($product['name']); ?></a>
+								<?php echo esc_html($product['name']); ?>
 							</h3>
 							<div class="product-card__rating" aria-label="<?php echo esc_attr(sprintf(__('Calificación: %s de 5', 'kulimbos'), $product['rating'])); ?>">
 								<?php for ($i = 0; $i < 5; $i++) : ?>
